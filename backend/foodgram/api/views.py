@@ -4,15 +4,15 @@ from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django.utils.crypto import get_random_string
 from django_filters.rest_framework import DjangoFilterBackend
-from recipes.models import (FavoriteRecipe, Ingredient, Recipe,
-                            RecipeIngredients, ShoppingList, Tag)
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenViewBase
-from users.models import CustomUser
 
+from recipes.models import (FavoriteRecipe, Ingredient, Recipe,
+                            RecipeIngredient, ShoppingList, Tag)
+from users.models import CustomUser
 from .filters import CustomFilter
 from .pagination import RecipePagination
 from .permissions import AuthorOrReadOnly
@@ -144,10 +144,6 @@ class RecipeViewset(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-    def perform_partial_update(self, recipe, serializer):
-        serializer = serializer(recipe, data=self.request.data, partial=True)
-        serializer.save()
-
     def new_recipe(self, model, request, pk):
         user = self.request.user
         current_recipe = get_object_or_404(Recipe, pk=pk)
@@ -196,7 +192,7 @@ class RecipeViewset(viewsets.ModelViewSet):
         url_path='download_shopping_cart'
     )
     def download_shopping_cart(self, request):
-        ingredients = RecipeIngredients.objects.filter(
+        ingredients = RecipeIngredient.objects.filter(
             recipe__shopping_list__user=request.user
         ).values(
             'ingredient__name', 'ingredient__measurement_unit'

@@ -1,6 +1,7 @@
 from django.contrib import admin
+
 from recipes.models import (FavoriteRecipe, Ingredient, Recipe,
-                            RecipeIngredients, ShoppingList, Tag)
+                            RecipeIngredient, ShoppingList, Tag)
 
 
 class IngredientAdmin(admin.ModelAdmin):
@@ -25,25 +26,25 @@ class TagInline(admin.TabularInline):
     fields = ('slug', 'name', 'color')
 
 
-class RecipeIngredientsAdmin(admin.ModelAdmin):
+class RecipeIngredientAdmin(admin.ModelAdmin):
     list_display = ('id', 'recipe', 'ingredient', 'quantity')
     search_fields = ('recipe__name', 'ingredient__name')
     inline = [IngredientInline, ]
 
 
-class RecipeIngredientsInline(admin.TabularInline):
-    model = RecipeIngredients
+class RecipeIngredientInline(admin.TabularInline):
+    model = RecipeIngredient
     autocomplete_fields = ('ingredient',)
 
 
 class RecipeAdmin(admin.ModelAdmin):
-    def favorite_count(self, obj):
-        return obj.users_favorite.all().count()
-
     list_display = ('id', 'name', 'author', 'pub_date', 'favorite_count')
     list_filter = ('name', 'author', 'pub_date', 'tag')
     search_fields = ('name', 'user__username')
-    inline = [RecipeIngredientsInline, TagInline]
+    inline = [RecipeIngredientInline, TagInline]
+
+    def favorite_count(self, obj):
+        return obj.users_favorite.all().count()
 
 
 class ShoppingListAdmin(admin.ModelAdmin):
@@ -58,7 +59,7 @@ class FavoriteRecipeAdmin(admin.ModelAdmin):
 
 admin.site.register(Ingredient, IngredientAdmin)
 admin.site.register(Tag, TagAdmin)
-admin.site.register(RecipeIngredients, RecipeIngredientsAdmin)
+admin.site.register(RecipeIngredient, RecipeIngredientAdmin)
 admin.site.register(Recipe, RecipeAdmin)
 admin.site.register(ShoppingList, ShoppingListAdmin)
 admin.site.register(FavoriteRecipe, FavoriteRecipeAdmin)

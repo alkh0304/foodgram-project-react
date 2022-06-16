@@ -1,4 +1,5 @@
 from django_filters import rest_framework as filters
+
 from recipes.models import Recipe, Tag
 
 
@@ -22,13 +23,13 @@ class CustomFilter(filters.FilterSet):
         fields = ('author', 'tags', 'is_favorited', 'is_in_shopping_cart')
 
     def get_is_favorited(self, queryset, name, value):
-        if self.request.user.is_authenticated and value is True:
+        if self.request.user.is_authenticated and value:
             return queryset.filter(
                 users_favorite__user=self.request.user)
         return queryset
 
     def get_is_in_shopping_list(self, queryset, name, value):
-        if self.request.user.is_authenticated and value is True:
+        if self.request.user.is_authenticated and value:
             return queryset.filter(
                 shopping_list__user=self.request.user)
         return queryset

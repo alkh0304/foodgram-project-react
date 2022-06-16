@@ -1,6 +1,7 @@
 from colorfield.fields import ColorField
 from django.core import validators
 from django.db import models
+
 from users.models import CustomUser
 
 
@@ -8,9 +9,6 @@ class Ingredient(models.Model):
     name = models.CharField(max_length=256, verbose_name='Ингредиент')
     measurement_unit = models.CharField(
         max_length=256, verbose_name='Единица измерения')
-
-    def __str__(self):
-        return f'{self.name} измеряются в {self.measurement_unit}'
 
     class Meta:
         verbose_name = 'Ингредиент'
@@ -21,6 +19,9 @@ class Ingredient(models.Model):
                 'measurement_unit'
             ], name='unique_ingredient'),
         ]
+
+    def __str__(self):
+        return f'{self.name} измеряются в {self.measurement_unit}'
 
 
 class Tag(models.Model):
@@ -36,9 +37,6 @@ class Tag(models.Model):
         verbose_name='Цвет Тега')
     slug = models.SlugField(unique=True, verbose_name='Слаг Тега')
 
-    def __str__(self):
-        return self.name
-
     class Meta:
         verbose_name = 'Тег'
         verbose_name_plural = 'Теги'
@@ -48,6 +46,9 @@ class Tag(models.Model):
                 'slug'
             ], name='unique_tag'),
         ]
+
+    def __str__(self):
+        return self.name
 
 
 class Recipe(models.Model):
@@ -63,7 +64,7 @@ class Recipe(models.Model):
     text = models.TextField('Текст рецепта')
     ingredients = models.ManyToManyField(
         Ingredient,
-        through='RecipeIngredients',
+        through='RecipeIngredient',
         through_fields=('recipe', 'ingredient'),
         verbose_name='Ингредиенты',
         help_text='Выберите ингредиенты, используемые в рецепте'
@@ -92,16 +93,16 @@ class Recipe(models.Model):
         default=30
     )
 
-    def __str__(self):
-        return self.name
-
     class Meta:
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
         ordering = ('-pub_date',)
 
+    def __str__(self):
+        return self.name
 
-class RecipeIngredients(models.Model):
+
+class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         verbose_name='Рецепт',
@@ -120,10 +121,6 @@ class RecipeIngredients(models.Model):
         validators=[validators.MinValueValidator(0)]
     )
 
-    def __str__(self):
-        return (f'Для рецепта {self.recipe} необходимо {self.quantity} '
-                f'ингредиента {self.ingredient}')
-
     class Meta:
         verbose_name = 'Ингредиент для рецепта'
         verbose_name_plural = 'Ингредиенты для рецепта'
@@ -134,6 +131,10 @@ class RecipeIngredients(models.Model):
                 'recipe'
             ], name='unique_ingredient_amount'),
         ]
+
+    def __str__(self):
+        return (f'Для рецепта {self.recipe} необходимо {self.quantity} '
+                f'ингредиента {self.ingredient}')
 
 
 class ShoppingList(models.Model):
@@ -150,9 +151,6 @@ class ShoppingList(models.Model):
         verbose_name='В списке у пользователя'
     )
 
-    def __str__(self):
-        return f'{self.user} добавил {self.recipe} в Список покупок'
-
     class Meta:
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Список покупок'
@@ -162,6 +160,9 @@ class ShoppingList(models.Model):
                 'recipe'
             ], name='unique_shopping_list'),
         ]
+
+    def __str__(self):
+        return f'{self.user} добавил {self.recipe} в Список покупок'
 
 
 class FavoriteRecipe(models.Model):
@@ -178,9 +179,6 @@ class FavoriteRecipe(models.Model):
         verbose_name='Избранный рецепт'
     )
 
-    def __str__(self):
-        return f'{self.user} добавил {self.recipe} в Избранное'
-
     class Meta:
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранное'
@@ -190,3 +188,6 @@ class FavoriteRecipe(models.Model):
                 'recipe'
             ], name='unique_favorite'),
         ]
+
+    def __str__(self):
+        return f'{self.user} добавил {self.recipe} в Избранное'

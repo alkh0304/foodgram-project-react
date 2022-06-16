@@ -4,11 +4,11 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv('infra/.env')
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = '-1($1hc(8(s#1-nzz65hs_dd1%0w%#h8t$pcsiyy+okcul25t!b'
+SECRET_KEY = str(os.getenv('SECRET_KEY'))
 
 DEBUG = os.getenv('DEBUG', default=False)
 

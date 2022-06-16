@@ -29,13 +29,6 @@ class CustomUser(AbstractUser):
         'email', 'first_name', 'last_name', 'password'
         ]
 
-    def __str__(self):
-        return f'{self.username}'
-
-    def set_confirmation_code(self, confirmation_code):
-        """Установка confirmation_code"""
-        self.confirmation_code = confirmation_code
-
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
@@ -46,6 +39,13 @@ class CustomUser(AbstractUser):
                 'email'
             ], name='unique_user'),
         ]
+
+    def __str__(self):
+        return f'{self.username}'
+
+    def set_confirmation_code(self, confirmation_code):
+        """Установка confirmation_code"""
+        self.confirmation_code = confirmation_code
 
 
 class Subscription(models.Model):
@@ -62,9 +62,6 @@ class Subscription(models.Model):
         verbose_name='Автор'
     )
 
-    def __str__(self):
-        return f'{self.user} подписался на {self.author}'
-
     class Meta:
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
@@ -72,3 +69,6 @@ class Subscription(models.Model):
             models.UniqueConstraint(fields=['user', 'author'],
                                     name='unique_subscription')
         ]
+
+    def __str__(self):
+        return f'{self.user} подписался на {self.author}'
