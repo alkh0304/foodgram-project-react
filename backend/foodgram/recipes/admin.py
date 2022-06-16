@@ -4,14 +4,14 @@ from recipes.models import (FavoriteRecipe, Ingredient, Recipe,
 
 
 class IngredientAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'm_unit')
-    list_filter = ('name', 'm_unit')
-    search_fields = ('name', 'm_unit')
+    list_display = ('id', 'name', 'measurement_unit')
+    list_filter = ('name', 'measurement_unit')
+    search_fields = ('name', 'measurement_unit')
 
 
 class IngredientInline(admin.TabularInline):
     model = Ingredient
-    fields = ('name', 'm_unit')
+    fields = ('name', 'measurement_unit')
 
 
 class TagAdmin(admin.ModelAdmin):

@@ -6,10 +6,11 @@ from users.models import CustomUser
 
 class Ingredient(models.Model):
     name = models.CharField(max_length=256, verbose_name='Ингредиент')
-    m_unit = models.CharField(max_length=256, verbose_name='Единица измерения')
+    measurement_unit = models.CharField(
+        max_length=256, verbose_name='Единица измерения')
 
     def __str__(self):
-        return f'{self.name} измеряются в {self.m_unit}'
+        return f'{self.name} измеряются в {self.measurement_unit}'
 
     class Meta:
         verbose_name = 'Ингредиент'
@@ -17,7 +18,7 @@ class Ingredient(models.Model):
         constraints = [
             models.UniqueConstraint(fields=[
                 'name',
-                'm_unit'
+                'measurement_unit'
             ], name='unique_ingredient'),
         ]
 

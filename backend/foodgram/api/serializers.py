@@ -129,7 +129,7 @@ class IngredientSerielizer(serializers.ModelSerializer):
     """Сериализатор отдельного ингредиента."""
     class Meta:
         model = Ingredient
-        fields = ('name', 'm_unit', 'id')
+        fields = ('name', 'measurement_unit', 'id')
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -142,7 +142,9 @@ class TagSerializer(serializers.ModelSerializer):
 class RecipeIngredientsSerializer(serializers.ModelSerializer):
     """Сериализатор списка ингредиентов в рецепте."""
     name = serializers.CharField(source='ingredient.name', read_only=True)
-    m_unit = serializers.CharField(source='ingredient.m_unit', read_only=True)
+    measurement_unit = serializers.CharField(
+        source='ingredient.measurement_unit', read_only=True
+    )
     quantity = serializers.IntegerField(source='quantity')
     id = serializers.IntegerField(source='ingredient.id')
 
