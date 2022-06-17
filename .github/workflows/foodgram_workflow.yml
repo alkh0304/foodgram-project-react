@@ -34,6 +34,7 @@ jobs:
         username: ${{ secrets.USER }}
         key: ${{ secrets.SSH_KEY }}
         script: |
+          cd foodgram-project-react/infra
           sudo docker pull ${{ secrets.DOCKER_USERNAME }}/foodgram
           sudo docker stop $(sudo docker ps -a -q)
           sudo docker run --rm -d -p 5000:5000 ${{ secrets.DOCKER_USERNAME }}/foodgram
