@@ -129,6 +129,11 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
 }
 
+AUTHENTICATION_BACKENDS = (
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend"
+)
+
 DJOSER = {
     "LOGIN_FIELD": 'email',
     'USER_ID_FIELD': 'id',
