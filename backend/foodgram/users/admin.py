@@ -4,7 +4,8 @@ from .models import CustomUser, Subscription
 
 
 class CustomUserAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'username', 'email', 'subscribers_count')
+    list_display = ('pk', 'username', 'first_name', 'last_name', 'email',
+                    'date_joined', 'subscribers_count')
     list_filter = ('username', 'email')
     search_fields = ('username', 'email')
     ordering = ('pk',)
@@ -20,6 +21,5 @@ class SubscriptionAdmin(admin.ModelAdmin):
     search_fields = ('user', 'author')
 
 
-admin.site.unregister(CustomUser)
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(Subscription, SubscriptionAdmin)
