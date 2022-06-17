@@ -137,8 +137,8 @@ DJOSER = {
     'HIDE_USERS': False,
     'SERIALIZERS': {
 
-        'user': 'users.serializers.CurrentUserSerializer',
-        'current_user': 'users.serializers.CurrentUserSerializer',
+        'user': 'api.serializers.UserSerializer',
+        'current_user': 'api.serializers.UserSerializer',
     },
     'PERMISSIONS': {
         'activation': ['rest_framework.permissions.AllowAny'],
