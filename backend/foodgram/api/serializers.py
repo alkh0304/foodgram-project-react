@@ -23,9 +23,6 @@ class UserSerializer(UserSerializer):
         return Subscription.objects.filter(
             user=request.user, author=obj).exists()
 
-    def create(self, validated_data):
-        return CustomUser.objects.create_user(**validated_data)
-
 
 class SubscriptionSerializer(serializers.ModelSerializer):
     """Сериализатор подписки."""
