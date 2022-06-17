@@ -36,8 +36,8 @@ jobs:
         script: |
           cd foodgram-project-react/infra
           sudo docker pull ${{ secrets.DOCKER_USERNAME }}/foodgram
-          sudo docker stop $(sudo docker ps -a -q)
-          sudo docker run --rm -d -p 5000:5000 ${{ secrets.DOCKER_USERNAME }}/foodgram
+          sudo docker-compose stop
+          sudo docker-compose rm backend
           rm .env
           touch .env
           echo DB_NAME=${{ secrets.DB_NAME }} >> .env
