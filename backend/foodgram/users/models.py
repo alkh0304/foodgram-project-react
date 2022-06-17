@@ -9,9 +9,6 @@ class CustomUser(AbstractUser):
     username = models.CharField(
         'Имя пользователя', max_length=150, unique=True,
         validators=[MinLengthValidator(5, message='Минимум 5 символов')])
-    password = models.CharField(
-        'Пароль', max_length=150,
-        validators=[MinLengthValidator(5, message='Минимум 5 символов')])
     email = models.EmailField('Email адрес', unique=True)
     first_name = models.CharField('Имя', max_length=30, blank=True)
     last_name = models.CharField('Фамилия', max_length=150, blank=True)
@@ -25,9 +22,7 @@ class CustomUser(AbstractUser):
 
     EMAIL_FIELD = 'email'
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = [
-        'email', 'first_name', 'last_name', 'password'
-        ]
+    REQUIRED_FIELDS = ['email']
 
     class Meta:
         verbose_name = 'Пользователь'
