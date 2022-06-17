@@ -25,7 +25,7 @@ class CustomUser(AbstractUser):
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
 
-    ovjects = CustomUserManager()
+    objects = CustomUserManager()
 
     class Meta:
         verbose_name = 'Пользователь'
