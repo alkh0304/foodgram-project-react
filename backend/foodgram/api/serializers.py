@@ -16,6 +16,15 @@ class UserSerializer(UserSerializer):
         fields = ('email', 'id', 'username', 'first_name',
                   'last_name', 'password', 'is_subscribed')
 
+    def create(self, validated_data):
+        user = CustomUser(
+            email=validated_data['email'],
+            username=validated_data['username']
+        )
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
+
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
         if request is None or request.user.is_anonymous:
