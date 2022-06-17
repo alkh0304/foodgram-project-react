@@ -5,7 +5,7 @@ from .models import CustomUser, Subscription
 
 class CustomUserAdmin(admin.ModelAdmin):
     list_display = ('pk', 'username', 'first_name', 'last_name', 'email',
-                    'date_joined', 'subscribers_count')
+                    'subscribers_count')
     list_filter = ('username', 'email')
     search_fields = ('username', 'email')
     ordering = ('pk',)
