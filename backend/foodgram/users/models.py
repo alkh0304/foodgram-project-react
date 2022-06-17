@@ -13,9 +13,10 @@ class CustomUser(AbstractUser):
     )
     first_name = models.CharField('Имя', max_length=30, blank=True)
     last_name = models.CharField('Фамилия', max_length=150, blank=True)
-    bio = models.CharField('Биография', max_length=200, blank=True, null=True)
+    bio = models.CharField('Биография', max_length=200, blank=True,
+                           null=True, default=1)
     confirmation_code = models.CharField(
-        'Код подтверждения', blank=True, null=True, max_length=128
+        'Код подтверждения', blank=True, null=True, max_length=128, default=1
     )
 
     USERNAME_FIELD = 'email'
