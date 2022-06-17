@@ -8,7 +8,7 @@ from recipes.models import (FavoriteRecipe, Ingredient, Recipe,
 from users.models import CustomUser, Subscription
 
 
-class UserSerializer(UserSerializer):
+class CustomUserSerializer(UserSerializer):
     is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
@@ -16,21 +16,15 @@ class UserSerializer(UserSerializer):
         fields = ('email', 'id', 'username', 'first_name',
                   'last_name', 'password', 'is_subscribed')
 
-    def create(self, validated_data):
-        user = CustomUser(
-            email=validated_data['email'],
-            username=validated_data['username']
-        )
-        user.set_password(validated_data['password'])
-        user.save()
-        return user
-
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
         if request is None or request.user.is_anonymous:
             return False
         return Subscription.objects.filter(
             user=request.user, author=obj).exists()
+
+    def create(self, validated_data):
+        return CustomUser.objects.create_user(**validated_data)
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
