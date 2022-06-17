@@ -10,7 +10,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = str(os.getenv('SECRET_KEY'))
 
-DEBUG = os.getenv('DEBUG', default=False)
+DEBUG = os.getenv('DEBUG', default=True)
 
 ALLOWED_HOSTS = ['*']
 
@@ -132,3 +132,12 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=14),
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+EMAIL_HOST = 'aleksanderkhomenko98@gmail.com'
+EMAIL_PORT = 465
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = True
+EMAIL_HOST_USER = "servicebot5170@gmail.com"
+EMAIL_HOST_PASSWORD = "1QAZXSW2_1QAZXSW2_1QAZXSW2"
+SERVER_EMAIL = EMAIL_HOST_USER
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
