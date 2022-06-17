@@ -14,14 +14,7 @@ class CustomUserSerializer(UserSerializer):
     class Meta:
         model = CustomUser
         fields = ('email', 'id', 'username', 'first_name',
-                  'last_name', 'password', 'is_subscribed')
-
-    def get_is_subscribed(self, obj):
-        request = self.context.get('request')
-        if request is None or request.user.is_anonymous:
-            return False
-        return Subscription.objects.filter(
-            user=request.user, author=obj).exists()
+                  'last_name', 'password')
 
     def create(self, validated_data):
         return CustomUser.objects.create_user(**validated_data)
