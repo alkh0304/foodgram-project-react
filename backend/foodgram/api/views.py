@@ -6,7 +6,6 @@ from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenViewBase
 
 from recipes.models import (FavoriteRecipe, Ingredient, Recipe,
                             RecipeIngredient, ShoppingList, Tag)
@@ -14,53 +13,11 @@ from users.models import CustomUser
 from .filters import CustomFilter
 from .pagination import RecipePagination
 from .permissions import AuthorOrReadOnly
-from .serializers import (CustomTokenSerializer, IngredientSerielizer,
+from .serializers import (IngredientSerielizer,
                           RecipeCreateSerializer, RecipeViewSerializer,
                           SubscriptionSerializer, TagSerializer,
-                          TinyRecipeSerializer, UserSerializer)
+                          TinyRecipeSerializer)
 from .utils import convert_pdf
-
-
-class UserViewSet(viewsets.ModelViewSet):
-    """CRUD user models."""
-    queryset = CustomUser.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, SearchFilter]
-    search_fields = ['username']
-    lookup_field = 'username'
-
-    def perform_create(self, serializer):
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    @action(
-        detail=False,
-        methods=['get', 'put', 'patch'],
-        url_path='me',
-        permission_classes=[permissions.IsAuthenticated]
-    )
-    def me(self, request):
-        """API для редактирования текущим пользователем своих данных."""
-        user = request.user
-        if request.method == 'GET':
-            serializer = self.get_serializer(user)
-            return Response(serializer.data)
-        serializer = self.get_serializer(user, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(partial=True)
-        return Response(serializer.data)
-
-
-class CustomTokenObtainPairView(TokenObtainPairView):
-    serializer_class = CustomTokenSerializer
-
-
-class CustomTokenView(TokenViewBase):
-    """Получение токена взамен username."""
-    serializer_class = CustomTokenSerializer
-    permission_classes = [permissions.AllowAny]
 
 
 class SubscriptionViewSet(viewsets.ModelViewSet):
