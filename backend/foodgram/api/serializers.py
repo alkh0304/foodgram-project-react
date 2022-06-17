@@ -1,62 +1,24 @@
+from djoser.serializers import UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
-from rest_framework.exceptions import NotFound
 from rest_framework.validators import UniqueTogetherValidator
-from rest_framework_simplejwt.tokens import RefreshToken
 
 from recipes.models import (FavoriteRecipe, Ingredient, Recipe,
                             RecipeIngredient, ShoppingList, Tag)
 from users.models import CustomUser, Subscription
 
 
-class UserRegistationSerializer(serializers.ModelSerializer):
-    """Сериализатор модели CustomUserModels для регистрации пользователей."""
+class UserSerializer(UserSerializer):
+
     class Meta:
         model = CustomUser
-        fields = ('username', 'email')
-        read_only_fields = ['password']
-        validators = [
-            UniqueTogetherValidator(
-                queryset=CustomUser.objects.all(),
-                fields=['username', 'email']
-            )
-        ]
-
-    def validate_username(self, value):
-        """Проверка имени пользователя."""
-        if value.lower() == 'me':
-            raise serializers.ValidationError(
-                f'Имя {value} не может быть использованно')
-        return value
-
-
-class UserSerializer(UserRegistationSerializer):
-    """Сериализатор модели CustomUserModels."""
-    class Meta:
-        model = CustomUser
-        fields = ('username', 'email', 'first_name',
-                  'last_name', 'bio', 'date_joined')
-        read_only_fields = ['password']
-
-
-class CustomTokenSerializer(serializers.Serializer):
-    """Получение токена."""
-    username = serializers.CharField()
-
-    @classmethod
-    def get_tokens_for_user(cls, user):
-        """Обновление токена."""
-        return RefreshToken.for_user(user)
-
-    @staticmethod
-    def validate_username(value):
-        """Поиск указанных данных."""
-        if not CustomUser.objects.filter(username=value).exists():
-            raise NotFound(
-                {'error': 'Не удается пройти аутентификацию с указанными '
-                          f'учетными данными, проверьте username: {value}'}
-            )
-        return value
+        fields = (
+            'email',
+            'id',
+            'username',
+            'first_name',
+            'last_name'
+        )
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
