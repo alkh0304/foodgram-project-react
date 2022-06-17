@@ -1,5 +1,5 @@
 import os
-from datetime import timedelta
+
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -130,8 +130,7 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=14),
-    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_TYPES': ('JWT',),
 }
 
 EMAIL_HOST = 'aleksanderkhomenko98@gmail.com'
