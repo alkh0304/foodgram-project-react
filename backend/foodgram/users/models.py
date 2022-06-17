@@ -20,8 +20,7 @@ class CustomUser(AbstractUser):
 
     objects = UserManager()
 
-    EMAIL_FIELD = 'email'
-    USERNAME_FIELD = 'username'
+    USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = [
         'email', 'first_name', 'last_name', 'password'
         ]
