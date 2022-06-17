@@ -133,11 +133,11 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-EMAIL_HOST = 'aleksanderkhomenko98@gmail.com'
+EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 465
 EMAIL_USE_TLS = False
 EMAIL_USE_SSL = True
-EMAIL_HOST_USER = "servicebot5170@gmail.com"
+EMAIL_HOST_USER = "konicakz.scan@gmail.com"
 EMAIL_HOST_PASSWORD = "1QAZXSW2_1QAZXSW2_1QAZXSW2"
 SERVER_EMAIL = EMAIL_HOST_USER
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
