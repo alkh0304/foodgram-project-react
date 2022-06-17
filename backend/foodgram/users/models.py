@@ -1,8 +1,11 @@
 from django.contrib.auth.base_user import AbstractBaseUser
+from django.contrib.auth.models import PermissionsMixin
 from django.db import models
 
+from usermanager import CustomUserManager
 
-class CustomUser(AbstractBaseUser):
+
+class CustomUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(
         unique=True,
         max_length=254,
@@ -12,6 +15,11 @@ class CustomUser(AbstractBaseUser):
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
+    is_superuser = models.BooleanField(default=False)
+    is_staff = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+
+    ovjects = CustomUserManager()
 
     class Meta:
         verbose_name = 'Пользователь'
