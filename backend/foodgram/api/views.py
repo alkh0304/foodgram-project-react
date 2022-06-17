@@ -1,14 +1,14 @@
+from django.conf import settings
 from django.db.models import Sum
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
+from django.utils.crypto import get_random_string
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, status, viewsets
-from rest_framework.authtoken.models import Token
-from rest_framework.authtoken.views import ObtainAuthToken
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
-from rest_framework.views import APIView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenViewBase
 
 from recipes.models import (FavoriteRecipe, Ingredient, Recipe,
                             RecipeIngredient, ShoppingList, Tag)
@@ -19,7 +19,8 @@ from .permissions import AuthorOrReadOnly
 from .serializers import (CustomTokenSerializer, IngredientSerielizer,
                           RecipeCreateSerializer, RecipeViewSerializer,
                           SubscriptionSerializer, TagSerializer,
-                          TinyRecipeSerializer, UserSerializer)
+                          TinyRecipeSerializer, UserRegistationSerializer,
+                          UserSerializer)
 from .utils import convert_pdf
 
 
@@ -55,37 +56,39 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class CreateTokenView(ObtainAuthToken):
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenSerializer
+
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny, ])
+def get_confirmation_code(request):
+    """
+    Получить код подтверждения и пароль на переданный email.
+    Поля email и username должны быть уникальными.
+    """
+    serializer = UserRegistationSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    user = CustomUser.objects.create(
+        username=serializer.validated_data['username'],
+        email=serializer.validated_data['email'],
+    )
+    chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
+    confirmation_code = get_random_string(18, chars)
+    user.set_confirmation_code(confirmation_code=confirmation_code)
+    user.save()
+    user.email_user(
+        subject='Создан confirmation code для получения token',
+        message=f'Ваш confirmation code: {confirmation_code}',
+        from_email=settings.EMAIL_HOST_USER,
+    )
+    return Response(serializer.validated_data, status=status.HTTP_200_OK)
+
+
+class CustomTokenView(TokenViewBase):
+    """Получение токена взамен username и confirmation code."""
+    serializer_class = CustomTokenSerializer
     permission_classes = [permissions.AllowAny]
-
-    def post(self, request):
-        serializer = CustomTokenSerializer(data=request.data)
-        if serializer.is_valid():
-            user = get_object_or_404(
-                CustomUser, email=serializer.validated_data['email']
-            )
-            token, created = Token.objects.get_or_create(user=user)
-            return Response(
-                {
-                    'auth_token': token.key
-                },
-                status=status.HTTP_201_CREATED
-            )
-        return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-
-class RemoveTokenView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    def post(self, request):
-        token = request.auth
-        token.delete()
-        return Response(
-            status=status.HTTP_204_NO_CONTENT
-        )
 
 
 class SubscriptionViewSet(viewsets.ModelViewSet):

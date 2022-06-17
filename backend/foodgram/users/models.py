@@ -17,10 +17,14 @@ class CustomUser(AbstractUser):
     last_name = models.CharField('Фамилия', max_length=150, blank=True)
     date_joined = models.DateTimeField('Дата создания', default=timezone.now)
     bio = models.CharField('Биография', max_length=200, blank=True)
+    confirmation_code = models.CharField(
+        'Код подтверждения', blank=True, max_length=128
+    )
 
     objects = UserManager()
 
-    USERNAME_FIELD = 'email'
+    EMAIL_FIELD = 'email'
+    USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = [
         'email', 'first_name', 'last_name', 'password'
         ]
@@ -38,6 +42,10 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return f'{self.username}'
+
+    def set_confirmation_code(self, confirmation_code):
+        """Установка confirmation_code"""
+        self.confirmation_code = confirmation_code
 
 
 class Subscription(models.Model):
