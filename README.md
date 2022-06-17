@@ -65,3 +65,17 @@ docker-compose exec web python manage.py createsuperuser
 ```
 docker-compose exec web python manage.py collectstatic --no-input
 ```
+
+- Загрузите список ингредиентов на сайт, скопировав файл ingredients.csv из папки data в папку infra:
+
+```
+docker cp ingredients.csv <CONTAINER ID>:/code
+```
+
+```
+docker exec -it <CONTAINER ID> bash
+```
+
+```
+python foodgram/manage.py import_ingredients /app/ingredients.csv
+```
