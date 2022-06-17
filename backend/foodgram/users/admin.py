@@ -20,5 +20,6 @@ class SubscriptionAdmin(admin.ModelAdmin):
     search_fields = ('user', 'author')
 
 
+admin.site.unregister(CustomUser)
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(Subscription, SubscriptionAdmin)
