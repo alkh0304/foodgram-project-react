@@ -134,7 +134,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return recipe
 
     def create(self, vaidated_data):
-        ingredients = vaidated_data.pop('ingredients')
+        ingredients = self.initial_data.pop('ingredients')
         ingredient_names = set()
         for ingredient in ingredients:
             name = ingredient['ingredient']
@@ -147,8 +147,8 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     'Количество ингредиента не может быть отрицательным!'
                 )
-        image = vaidated_data.pop('image')
-        tags = vaidated_data.pop('tags')
+        image = self.initial_data.pop('image')
+        tags = self.initial_data.pop('tags')
         recipe = Recipe.objects.create(image=image, **vaidated_data)
         recipe.tags.set(tags)
         self.create_ingredients(recipe, ingredients)
