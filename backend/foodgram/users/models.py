@@ -1,4 +1,4 @@
-from django.contrib.auth.models import AbstractUser, UserManager
+from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinLengthValidator
 from django.db import models
 from django.utils import timezone
@@ -18,12 +18,9 @@ class CustomUser(AbstractUser):
     date_joined = models.DateTimeField('Дата создания', default=timezone.now)
     bio = models.CharField('Биография', max_length=200, blank=True, default=1)
 
-    objects = UserManager()
-
-    EMAIL_FIELD = 'email'
-    USERNAME_FIELD = 'username'
+    USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = [
-        'email', 'first_name', 'last_name', 'password'
+        'first_name', 'last_name', 'password'
         ]
 
     class Meta:

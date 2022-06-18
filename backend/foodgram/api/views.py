@@ -3,10 +3,12 @@ from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, status, viewsets
+from rest_framework.authtoken.models import Token
+from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
-from rest_framework_simplejwt.views import TokenViewBase
+from rest_framework.views import APIView
 
 from recipes.models import (FavoriteRecipe, Ingredient, Recipe,
                             RecipeIngredient, ShoppingList, Tag)
@@ -30,10 +32,12 @@ class UserViewSet(viewsets.ModelViewSet):
     search_fields = ['username']
     lookup_field = 'username'
 
-    def perform_create(self, serializer):
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    def get_permissions(self):
+        if self.action in ('list', 'create'):
+            permission_classes = [permissions.AllowAny]
+        else:
+            permission_classes = [permissions.IsAuthenticated]
+        return [permission() for permission in permission_classes]
 
     @action(
         detail=False,
@@ -53,10 +57,36 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class CustomTokenView(TokenViewBase):
-    """Получение токена взамен username и password."""
-    serializer_class = CustomTokenSerializer
+class GetTokenView(ObtainAuthToken):
     permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        serializer = CustomTokenSerializer(data=request.data)
+        if serializer.is_valid():
+            user = get_object_or_404(
+                CustomUser, email=serializer.validated_data['email']
+            )
+            token, created = Token.objects.get_or_create(user=user)
+            return Response(
+                {
+                    'auth_token': token.key
+                },
+                status=status.HTTP_201_CREATED
+            )
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST)
+
+
+class DelTokenView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        token = request.auth
+        token.delete()
+        return Response(
+            status=status.HTTP_204_NO_CONTENT
+        )
 
 
 class SubscriptionViewSet(viewsets.ModelViewSet):

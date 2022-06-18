@@ -1,9 +1,6 @@
-from django.shortcuts import get_object_or_404
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
-from rest_framework.exceptions import NotFound
 from rest_framework.validators import UniqueTogetherValidator
-from rest_framework_simplejwt.tokens import RefreshToken
 
 from recipes.models import (FavoriteRecipe, Ingredient, Recipe,
                             RecipeIngredient, ShoppingList, Tag)
@@ -30,6 +27,14 @@ class UserRegistationSerializer(serializers.ModelSerializer):
                 f'Имя {value} не может быть использованно')
         return value
 
+    def create(self, validated_data):
+        password = validated_data.pop('password')
+        user = CustomUser.objects.create(**validated_data)
+        user.set_password(password)
+        user.save()
+
+        return user
+
 
 class UserSerializer(UserRegistationSerializer):
     """Сериализатор модели CustomUserModels."""
@@ -41,32 +46,22 @@ class UserSerializer(UserRegistationSerializer):
 
 
 class CustomTokenSerializer(serializers.Serializer):
-    """Получение токена."""
-    username = serializers.CharField()
-    password = serializers.CharField()
+    email = serializers.EmailField(max_length=254)
+    password = serializers.CharField(max_length=128)
 
-    @classmethod
-    def get_tokens_for_user(cls, user):
-        """Обновление токена."""
-        return RefreshToken.for_user(user)
-
-    @staticmethod
-    def validate_username(value):
-        """Поиск указанных данных."""
-        if not CustomUser.objects.filter(username=value).exists():
-            raise NotFound(
-                {'error': 'Не удается пройти аутентификацию с указанными '
-                          f'учетными данными, проверьте username: {value}'}
+    def validate(self, data):
+        try:
+            user = CustomUser.objects.get(email=data['email'])
+        except CustomUser.DoesNotExist:
+            raise serializers.ValidationError(
+                'Предоставлен email незарегистрированного пользователя.'
             )
-        return value
 
-    def validate(self, attrs):
-        """Проверка username и confirmation_code."""
-        user = get_object_or_404(CustomUser, username=attrs['username'])
-        if attrs['confirmation_code'] == user.confirmation_code:
-            refresh = self.get_tokens_for_user(user)
-            return {'token': str(refresh.access_token)}
-        raise serializers.ValidationError('Данные не прошли проверку')
+        if user.check_password(data['password']):
+            return data
+        raise serializers.ValidationError(
+            'Неверный пароль для пользователя с указанным email.'
+        )
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
