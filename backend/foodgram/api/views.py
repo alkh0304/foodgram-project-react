@@ -2,6 +2,7 @@ from django.db.models import Sum
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+from djoser.views import UserViewSet as DjoserUserViewSet
 from rest_framework import permissions, status, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
@@ -23,7 +24,7 @@ from .serializers import (CustomTokenSerializer, IngredientSerielizer,
 from .utils import convert_pdf
 
 
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(DjoserUserViewSet):
     """CRUD user models."""
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer

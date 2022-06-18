@@ -1,10 +1,13 @@
 import io
 from typing import TextIO
 
+from django.contrib.auth.password_validation import (
+    password_validators_help_texts, validate_password)
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
+from rest_framework.serializers import ValidationError
 
 
 def convert_pdf(data: list, title: str) -> TextIO:
@@ -36,3 +39,14 @@ def convert_pdf(data: list, title: str) -> TextIO:
     buffer.seek(0)
 
     return buffer
+
+
+def password_verification(value: str) -> str:
+    help_text = password_validators_help_texts()
+    if validate_password(value) is None:
+        return value
+
+    raise ValidationError(
+        'Указан некорректный новый пароль. К паролю предъявляются следующие'
+        f'требования: {help_text}'
+    )

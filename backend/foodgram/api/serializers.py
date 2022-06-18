@@ -1,3 +1,4 @@
+from djoser.serializers import UserSerializer as DjoserUserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
@@ -7,7 +8,7 @@ from recipes.models import (FavoriteRecipe, Ingredient, Recipe,
 from users.models import CustomUser, Subscription
 
 
-class UserRegistationSerializer(serializers.ModelSerializer):
+class UserRegistationSerializer(DjoserUserSerializer):
     """Сериализатор модели CustomUserModels для регистрации пользователей."""
     class Meta:
         model = CustomUser
@@ -29,17 +30,6 @@ class UserRegistationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 f'Имя {value} не может быть использованно')
         return value
-
-    def create(self, validated_data):
-        user = CustomUser(
-            email=validated_data['email'],
-            username=validated_data['username'],
-            first_name=validated_data['first_name'],
-            last_name=validated_data['last_name']
-        )
-        user.set_password(validated_data['password'])
-        user.save()
-        return user
 
 
 class UserSerializer(UserRegistationSerializer):
