@@ -175,7 +175,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         recipe_tags = self.initial_data.get('tags')
         unique_tags = []
         for tag in recipe_tags:
-            tag_id = get_object_or_404(Ingredient, id=tag['id'])
+            tag_id = get_object_or_404(Tag, id=tag['id'])
             if tag_id not in unique_tags:
                 unique_tags.append(tag_id)
             else:
