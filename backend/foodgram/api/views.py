@@ -4,12 +4,9 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet as DjoserUserViewSet
 from rest_framework import permissions, status, viewsets
-from rest_framework.authtoken.models import Token
-from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from recipes.models import (FavoriteRecipe, Ingredient, Recipe,
                             RecipeIngredient, ShoppingList, Tag)
@@ -17,7 +14,7 @@ from users.models import CustomUser
 from .filters import CustomFilter
 from .pagination import RecipePagination
 from .permissions import AuthorOrReadOnly
-from .serializers import (CustomTokenSerializer, IngredientSerielizer,
+from .serializers import (IngredientSerielizer,
                           RecipeCreateSerializer, RecipeViewSerializer,
                           SubscriptionSerializer, TagSerializer,
                           TinyRecipeSerializer, UserRegistationSerializer)
@@ -49,38 +46,6 @@ class UserViewSet(DjoserUserViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save(partial=True)
         return Response(serializer.data)
-
-
-class GetTokenView(ObtainAuthToken):
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request):
-        serializer = CustomTokenSerializer(data=request.data)
-        if serializer.is_valid():
-            user = get_object_or_404(
-                CustomUser, email=serializer.validated_data['email']
-            )
-            token, created = Token.objects.get_or_create(user=user)
-            return Response(
-                {
-                    'auth_token': token.key
-                },
-                status=status.HTTP_201_CREATED
-            )
-        return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST)
-
-
-class DelTokenView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    def post(self, request):
-        token = request.auth
-        token.delete()
-        return Response(
-            status=status.HTTP_204_NO_CONTENT
-        )
 
 
 class SubscriptionViewSet(viewsets.ModelViewSet):
@@ -122,11 +87,19 @@ class RecipeViewset(viewsets.ModelViewSet):
     Обработка запросов о рецептах, просмотр, создание,
     изменение, удаление.
     """
-    permission_classes = [AuthorOrReadOnly]
     queryset = Recipe.objects.all()
     filter_backends = (DjangoFilterBackend, )
     filterset_class = CustomFilter
     pagination_class = RecipePagination
+
+    def get_permissions(self):
+        if self.action in ('list', 'retrieve'):
+            permission_classes = [permissions.AllowAny]
+        elif self.action in ('update', 'destroy', 'partial_update'):
+            permission_classes = [AuthorOrReadOnly]
+        else:
+            permission_classes = [permissions.IsAuthenticated]
+        return [permission() for permission in permission_classes]
 
     def get_serializer_class(self):
         if self.request.method == 'POST' or self.request.method == 'PATCH':
