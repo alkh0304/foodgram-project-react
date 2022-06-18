@@ -12,33 +12,8 @@ class UserRegistationSerializer(DjoserUserSerializer):
     """Сериализатор модели CustomUserModels для регистрации пользователей."""
     class Meta:
         model = CustomUser
-        fields = ('username', 'email')
-        read_only_fields = ['password']
-        validators = [
-            UniqueTogetherValidator(
-                queryset=CustomUser.objects.all(),
-                fields=['username', 'email']
-            )
-        ]
-        extra_kwargs = {
-            'password': {'write_only': True}
-        }
-
-    def validate_username(self, value):
-        """Проверка имени пользователя."""
-        if value.lower() == 'me':
-            raise serializers.ValidationError(
-                f'Имя {value} не может быть использованно')
-        return value
-
-
-class UserSerializer(UserRegistationSerializer):
-    """Сериализатор модели CustomUserModels."""
-    class Meta:
-        model = CustomUser
         fields = ('username', 'email', 'first_name',
                   'last_name', 'bio', 'date_joined')
-        read_only_fields = ['password']
 
 
 class CustomTokenSerializer(serializers.Serializer):
@@ -211,7 +186,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
 class RecipeViewSerializer(serializers.ModelSerializer):
     """Сериалиализатор просмотра рецептов."""
-    author = UserSerializer(read_only=True)
+    author = UserRegistationSerializer(read_only=True)
     tag = TagSerializer(many=True)
     ingredients = RecipeIngredientSerializer(
         read_only=True, many=True, source='ingredient_recipe')

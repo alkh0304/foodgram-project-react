@@ -20,25 +20,18 @@ from .permissions import AuthorOrReadOnly
 from .serializers import (CustomTokenSerializer, IngredientSerielizer,
                           RecipeCreateSerializer, RecipeViewSerializer,
                           SubscriptionSerializer, TagSerializer,
-                          TinyRecipeSerializer, UserSerializer)
+                          TinyRecipeSerializer, UserRegistationSerializer)
 from .utils import convert_pdf
 
 
 class UserViewSet(DjoserUserViewSet):
     """CRUD user models."""
     queryset = CustomUser.objects.all()
-    serializer_class = UserSerializer
+    serializer_class = UserRegistationSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter]
     search_fields = ['username']
     lookup_field = 'username'
-
-    def get_permissions(self):
-        if self.action in ('list', 'create'):
-            permission_classes = [permissions.AllowAny]
-        else:
-            permission_classes = [permissions.IsAuthenticated]
-        return [permission() for permission in permission_classes]
 
     @action(
         detail=False,
