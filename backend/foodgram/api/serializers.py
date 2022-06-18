@@ -107,7 +107,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         many=True, source='ingredient_recipe')
     tags = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Tag.objects.all())
-    image = Base64ImageField(max_length=None, use_url=True)
+    image = Base64ImageField(max_length=None)
 
     class Meta:
         model = Recipe
@@ -140,15 +140,12 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
         return new_recipe
 
-    def update(self, data, recipe):
-        tags = data.pop('tags')
-        ingredients = self.initial_data.pop('ingredients')
-        recipe.tags.clear()
-        recipe.tags.set(tags)
-        recipe.ingredients.all().delete()
-        self.create_ingredients(ingredients, recipe)
-        super().update(recipe, data)
-        return recipe
+    def update(self, instance, validated_data):
+        instance.tags.clear()
+        RecipeIngredient.objects.filter(recipe=instance).delete()
+        self.create_tags(validated_data.pop('tags'), instance)
+        self.create_ingredients(validated_data.pop('ingredients'), instance)
+        return super().update(instance, validated_data)
 
     def validate(self, data):
         recipe_ingredients = self.initial_data.get('ingredients')
