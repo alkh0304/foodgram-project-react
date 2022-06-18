@@ -1,4 +1,3 @@
-from django.db.models import Sum
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -9,7 +8,7 @@ from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
 
 from recipes.models import (FavoriteRecipe, Ingredient, Recipe,
-                            ShoppingList, Tag)
+                            RecipeIngredient, ShoppingList, Tag)
 from users.models import CustomUser
 from .filters import CustomFilter
 from .pagination import RecipePagination
@@ -157,11 +156,21 @@ class RecipeViewset(viewsets.ModelViewSet):
         url_path='download_shopping_cart'
     )
     def download_shopping_cart(self, request):
-        ingredients = Recipe.objects.filter(
-            shopping_list__user=request.user)
-        ingredient_list = Ingredient.objects.filter(
-            ingredient_recipe__recipe__in=ingredients
-        ).annotate(for_shopping=Sum('ingredient_recipe__amount'))
+        ingredient_list = {}
+        list = RecipeIngredient.objects.filter(
+            recipe__shopping_list__user=request.user).values_list(
+            'ingredient__name', 'ingredient__measurement_unit',
+            'amount'
+        )
+        for item in list:
+            name = item[0]
+            if name not in ingredient_list:
+                ingredient_list[name] = {
+                    'measurement_unit': item[1],
+                    'amount': item[2]
+                }
+            else:
+                ingredient_list[name]['amount'] += item[2]
 
         file = convert_pdf(ingredient_list, 'Список покупок')
 

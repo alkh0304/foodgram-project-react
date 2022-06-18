@@ -23,14 +23,10 @@ def convert_pdf(data: list, title: str) -> TextIO:
     height -= 30
 
     p.setFont('Raleway', 14)
-    string_number = 1
-    for i in data:
-        p.drawString(
-            15, height,
-            f'{string_number}. {i[0].capitalize()} ({i[1]}) - {i[2]}'
-        )
+    for i, (name, info) in enumerate(data.items(), 1):
+        p.drawString(75, height, (f'{i}. {name} - {info["amount"]} '
+                                  f'{info["measurement_unit"]}'))
         height -= 20
-        string_number += 1
 
     p.drawString(50, height, "Удачного похода в магазин!")
     p.showPage()
