@@ -133,12 +133,26 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         RecipeIngredient.objects.bulk_create(recipe_ingredients)
         return recipe
 
-    def create(self, data):
-        ingredients = data.pop('ingredient_recipe')
-        new_recipe = super().create(data)
-        add_ingredients_to_recipe(new_recipe, ingredients)
-
-        return new_recipe
+    def create(self, vaidated_data):
+        ingredients = vaidated_data.pop('ingredients')
+        ingredient_names = set()
+        for ingredient in ingredients:
+            name = ingredient['ingredient']
+            if name in ingredient_names:
+                raise serializers.ValidationError(
+                    'Не могут быть одинаковые ингредиенты для одного рецепта!'
+                )
+            ingredient_names.add(name)
+            if ingredient['amount'] < 0:
+                raise serializers.ValidationError(
+                    'Количество ингредиента не может быть отрицательным!'
+                )
+        image = vaidated_data.pop('image')
+        tags = vaidated_data.pop('tags')
+        recipe = Recipe.objects.create(image=image, **vaidated_data)
+        recipe.tags.set(tags)
+        self.create_ingredients(recipe, ingredients)
+        return recipe
 
     def update(self, obj, validated_data):
         obj.image = validated_data.get('image', obj.image)
