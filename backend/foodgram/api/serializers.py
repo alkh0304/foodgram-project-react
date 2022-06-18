@@ -37,13 +37,13 @@ class UserSerializer(UserRegistationSerializer):
         model = CustomUser
         fields = ('username', 'email', 'first_name',
                   'last_name', 'bio', 'date_joined')
-        read_only_fields = ['password', 'confirmation_code']
+        read_only_fields = ['password']
 
 
 class CustomTokenSerializer(serializers.Serializer):
     """Получение токена."""
     username = serializers.CharField()
-    confirmation_code = serializers.CharField()
+    password = serializers.CharField()
 
     @classmethod
     def get_tokens_for_user(cls, user):
