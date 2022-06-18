@@ -146,8 +146,10 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
     def create(self, data):
         ingredients = data.pop('ingredient_recipe')
+        image = data.pop('image')
         new_recipe = super().create(data)
         add_ingredients_to_recipe(new_recipe, ingredients)
+        new_recipe.image.set(image)
 
         return new_recipe
 
