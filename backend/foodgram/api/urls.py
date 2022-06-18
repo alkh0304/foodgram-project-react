@@ -14,8 +14,6 @@ router_v1.register('users/(?P<id>[^/.]+)/subscribe', views.SubscriptionViewSet,
 
 urlpatterns = [
     path('', include(router_v1.urls)),
-    path('auth/token/login/', views.GetTokenView.as_view(),
-         name='token_login'),
-    path('auth/token/logout/', views.DelTokenView.as_view(),
-         name='token_logout'),
+    path('', include('djoser.urls')),
+    path('auth/', include('djoser.urls.authtoken')),
 ]
