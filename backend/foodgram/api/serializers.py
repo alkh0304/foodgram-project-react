@@ -140,26 +140,22 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
         return new_recipe
 
-    def update(self, instance, validated_data):
-        """
-        Функция для обновления существующего рецепта.
-        """
-
-        instance.name = validated_data.get('name', instance.name)
-        instance.text = validated_data.get('text', instance.text)
-        instance.image = validated_data.get('image', instance.image)
-        instance.cooking_time = (
-            validated_data.get('cooking_time', instance.cooking_time)
+    def update(self, obj, validated_data):
+        obj.image = validated_data.get('image', obj.image)
+        obj.cooking_time = (
+            validated_data.get('cooking_time', obj.cooking_time)
         )
-        instance.tags.set(validated_data.get('tags', instance.tags))
-        instance.ingredients.clear()
-        instance.save()
+        obj.name = validated_data.get('name', obj.name)
+        obj.text = validated_data.get('text', obj.text)
+        obj.tags.set(validated_data.get('tags', obj.tags))
+        obj.ingredients.clear()
+        obj.save()
 
-        add_ingredients_to_recipe(instance,
+        add_ingredients_to_recipe(obj,
                                   validated_data['ingredient_recipe'])
-        instance.save()
+        obj.save()
 
-        return instance
+        return obj
 
     def validate(self, data):
         recipe_ingredients = self.initial_data.get('ingredients')
@@ -171,6 +167,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             else:
                 raise serializers.ValidationError(
                     'Ингредиенты не должны повторяться!')
+        print(data)
         return data
 
 
