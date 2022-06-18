@@ -45,7 +45,7 @@ def add_ingredients_to_recipe(recipe: Recipe, ingredients: dict) -> None:
             [
                 RecipeIngredient(
                     ingredient_id=ingredient['ingredient']['id'],
-                    quantity=ingredient['quantity'],
+                    amount=ingredient['amount'],
                     recipe=recipe
                 )
                 for ingredient in ingredients
