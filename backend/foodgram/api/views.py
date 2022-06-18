@@ -9,7 +9,7 @@ from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
 
 from recipes.models import (FavoriteRecipe, Ingredient, Recipe,
-                            RecipeIngredient, ShoppingList, Tag)
+                            ShoppingList, Tag)
 from users.models import CustomUser
 from .filters import CustomFilter
 from .pagination import RecipePagination
@@ -157,20 +157,13 @@ class RecipeViewset(viewsets.ModelViewSet):
         url_path='download_shopping_cart'
     )
     def download_shopping_cart(self, request):
-        user = request.user
-        user_list = (RecipeIngredient.objects.
-                     prefetch_related('ingredient', 'recipe').
-                     filter(recipe__shopping_list=user).
-                     values('ingredient__id').
-                     order_by('ingredient__id'))
+        ingredients = Recipe.objects.filter(
+            shopping_list__user=request.user)
+        ingredient_list = Ingredient.objects.filter(
+            ingredient_recipe__recipe__in=ingredients
+        ).annotate(for_shopping=Sum('ingredient_recipe__amount'))
 
-        ingredients = (
-            user_list.annotate(amount=Sum('quantity')).values_list(
-                'ingredient__name', 'ingredient__measurement_unit', 'amount'
-            )
-        )
-
-        file = convert_pdf(ingredients, 'Список покупок')
+        file = convert_pdf(ingredient_list, 'Список покупок')
 
         return FileResponse(
             file,
