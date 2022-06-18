@@ -114,13 +114,13 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     )
     ingredients = RecipeIngredientSerializer(
         many=True, source='ingredient_recipe')
-    tag = serializers.PrimaryKeyRelatedField(
+    tags = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Tag.objects.all())
     image = Base64ImageField(max_length=None, use_url=True)
 
     class Meta:
         model = Recipe
-        fields = ('tag', 'author', 'ingredients', 'name',
+        fields = ('tags', 'author', 'ingredients', 'name',
                   'image', 'text', 'cooking_time', 'id')
         read_only_field = ('id', 'author')
         validators = [
@@ -143,19 +143,19 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return recipe
 
     def create(self, data):
-        tag = data.pop('tag')
+        tags = data.pop('tags')
         image = data.pop('image')
         ingredients = data.pop('ingredients')
         recipe = Recipe.objects.create(image=image, **data)
-        recipe.tag.set(tag)
+        recipe.tags.set(tags)
         self.create_ingredients(ingredients, recipe)
         return recipe
 
     def update(self, data, recipe):
-        tag = data.pop('tag')
+        tags = data.pop('tags')
         ingredients = data.pop('ingredients')
-        recipe.tag.clear()
-        recipe.tag.set(tag)
+        recipe.tags.clear()
+        recipe.tags.set(tags)
         recipe.ingredients.all().delete()
         self.create_ingredients(ingredients, recipe)
         super().update(recipe, data)
@@ -171,12 +171,12 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             else:
                 raise serializers.ValidationError(
                     'Ингредиенты не должны повторяться!')
-        recipe_tag = data['tag']
-        unique_tag = []
-        for tag in recipe_tag:
+        recipe_tags = data['tags']
+        unique_tags = []
+        for tag in recipe_tags:
             tag_id = tag['id']
-            if tag_id not in unique_tag:
-                unique_tag.append(tag_id)
+            if tag_id not in unique_tags:
+                unique_tags.append(tag_id)
             else:
                 raise serializers.ValidationError(
                     'Теги не должны повторяться!')
