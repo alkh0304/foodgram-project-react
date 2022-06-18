@@ -5,10 +5,7 @@ from djoser.views import UserViewSet as DjoserUserViewSet
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
-from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
-from rest_framework.views import APIView
-from backend.foodgram.users.models import Subscription
 
 from recipes.models import (FavoriteRecipe, Ingredient, Recipe,
                             RecipeIngredient, ShoppingList, Tag)
@@ -24,69 +21,26 @@ from .utils import convert_pdf
 
 
 class UserViewSet(DjoserUserViewSet):
-    """Djoser viewset User."""
+    """CRUD user models."""
     queryset = CustomUser.objects.all()
     serializer_class = UserRegistationSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 
-class SubscriptionViewSet(APIView):
+class SubscriptionViewSet(viewsets.ModelViewSet):
     """Запросы о подписке на авторов."""
     permission_classes = [permissions.IsAuthenticated]
+    model_class = CustomUser
     serializer_class = SubscriptionSerializer
-    pagination_class = RecipePagination
-
-    def post(self, request, *args, **kwargs):
-        user_id = self.kwargs.get('user_id')
-        if user_id == request.user.id:
-            return Response(
-                {'error': 'Нельзя подписаться на себя'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        if Subscription.objects.filter(
-                user=request.user,
-                author_id=user_id
-        ).exists():
-            return Response(
-                {'error': 'Вы уже подписаны на пользователя'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        author = get_object_or_404(CustomUser, id=user_id)
-        Subscription.objects.create(
-            user=request.user,
-            author_id=user_id
-        )
-        return Response(
-            self.serializer_class(author, context={'request': request}).data,
-            status=status.HTTP_201_CREATED
-        )
-
-    def delete(self, request, *args, **kwargs):
-        user_id = self.kwargs.get('user_id')
-        get_object_or_404(CustomUser, id=user_id)
-        subscription = Subscription.objects.filter(
-            user=request.user,
-            author_id=user_id
-        )
-        if subscription:
-            subscription.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(
-            {'error': 'Вы не подписаны на пользователя'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-
-class SubscriptionListView(ListAPIView):
-    """
-    APIView для просмотра подписок.
-    """
-    serializer_class = SubscriptionSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    pagination_class = RecipePagination
 
     def get_queryset(self):
-        return CustomUser.objects.filter(following__user=self.request.user)
+        current_user = self.request.user
+        return current_user.subscriber.all()
+
+    def perform_create(self, serializer):
+        author = get_object_or_404(CustomUser, pk=self.kwargs.get('pk'))
+        user = self.request.user
+        serializer.save(author=author, user=user)
 
 
 class IngredientViewset(viewsets.ModelViewSet):
