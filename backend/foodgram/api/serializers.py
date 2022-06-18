@@ -172,6 +172,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             else:
                 raise serializers.ValidationError(
                     'Ингредиенты не должны повторяться!')
+        return data
 
 
 class RecipeViewSerializer(serializers.ModelSerializer):
