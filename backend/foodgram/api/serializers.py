@@ -12,29 +12,18 @@ from .utils import add_ingredients_to_recipe
 
 class UserRegistationSerializer(DjoserUserSerializer):
     """Сериализатор модели CustomUserModels для регистрации пользователей."""
+    is_subscribed = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = CustomUser
         fields = ('username', 'email', 'first_name',
-                  'last_name', 'bio', 'date_joined')
+                  'last_name', 'bio', 'date_joined', 'is_subscribed')
 
-
-class CustomTokenSerializer(serializers.Serializer):
-    email = serializers.EmailField(max_length=254)
-    password = serializers.CharField(max_length=128)
-
-    def validate(self, data):
-        try:
-            user = CustomUser.objects.get(email=data['email'])
-        except CustomUser.DoesNotExist:
-            raise serializers.ValidationError(
-                'Предоставлен email незарегистрированного пользователя.'
-            )
-
-        if user.check_password(data['password']):
-            return data
-        raise serializers.ValidationError(
-            'Неверный пароль для пользователя с указанным email.'
-        )
+    def get_is_subscribed(self, obj):
+        user = self.context.get('request').user
+        if user.is_anonymous:
+            return False
+        return Subscription.objects.filter(user=user, author=obj.id).exists()
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
@@ -146,10 +135,8 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
     def create(self, data):
         ingredients = data.pop('ingredient_recipe')
-        image = data.pop('image')
         new_recipe = super().create(data)
         add_ingredients_to_recipe(new_recipe, ingredients)
-        new_recipe.image.set(image)
 
         return new_recipe
 

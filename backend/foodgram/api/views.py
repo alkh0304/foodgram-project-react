@@ -21,30 +21,10 @@ from .utils import convert_pdf
 
 
 class UserViewSet(DjoserUserViewSet):
-    """CRUD user models."""
+    """Djoser viewset User."""
     queryset = CustomUser.objects.all()
     serializer_class = UserRegistationSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, SearchFilter]
-    search_fields = ['username']
-    lookup_field = 'username'
-
-    @action(
-        detail=False,
-        methods=['get', 'put', 'patch'],
-        url_path='me',
-        permission_classes=[permissions.IsAuthenticated]
-    )
-    def me(self, request):
-        """API для редактирования текущим пользователем своих данных."""
-        user = request.user
-        if request.method == 'GET':
-            serializer = self.get_serializer(user)
-            return Response(serializer.data)
-        serializer = self.get_serializer(user, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(partial=True)
-        return Response(serializer.data)
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 
 class SubscriptionViewSet(viewsets.ModelViewSet):
