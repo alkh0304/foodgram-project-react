@@ -190,13 +190,13 @@ class RecipeViewSerializer(serializers.ModelSerializer):
     ingredients = RecipeIngredientSerializer(
         read_only=True, many=True, source='ingredient_recipe')
     is_favorited = serializers.SerializerMethodField()
-    is_in_shopping_cart = serializers.SerializerMethodField()
+    is_in_shopping_list = serializers.SerializerMethodField()
     image = Base64ImageField(max_length=None, use_url=True)
 
     class Meta:
         model = Recipe
         fields = ('tags', 'author', 'ingredients', 'is_favorited',
-                  'is_in_shopping_cart', 'name', 'image', 'text',
+                  'is_in_shopping_list', 'name', 'image', 'text',
                   'cooking_time', 'id')
 
     def get_is_favorited(self, obj):
@@ -207,7 +207,7 @@ class RecipeViewSerializer(serializers.ModelSerializer):
                 user=user, recipe=obj).exists()
         return False
 
-    def get_is_in_shopping_cart(self, obj):
+    def get_is_in_shopping_list(self, obj):
         """Проверка: добавлен ли рецепт в список покупок."""
         user = self.context['request'].user
         if user.is_authenticated:
