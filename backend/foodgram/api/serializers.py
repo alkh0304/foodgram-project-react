@@ -28,7 +28,10 @@ class UserRegistationSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        return CustomUser.objects.create_user(**validated_data)
+        user = CustomUser.objects.create_user(**validated_data)
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
 
 
 class UserSerializer(UserRegistationSerializer):
