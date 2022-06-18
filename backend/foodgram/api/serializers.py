@@ -7,6 +7,7 @@ from rest_framework.validators import UniqueTogetherValidator
 from recipes.models import (FavoriteRecipe, Ingredient, Recipe,
                             RecipeIngredient, ShoppingList, Tag)
 from users.models import CustomUser, Subscription
+from .utils import add_ingredients_to_recipe
 
 
 class UserRegistationSerializer(DjoserUserSerializer):
@@ -144,13 +145,11 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return recipe
 
     def create(self, data):
-        tags = data.pop('tags')
-        image = data.pop('image')
-        ingredients = self.initial_data.pop('ingredients')
-        recipe = Recipe.objects.create(image=image, **data)
-        recipe.tags.set(tags)
-        self.create_ingredients(ingredients, recipe)
-        return recipe
+        ingredients = data.pop('ingredient_recipe')
+        new_recipe = super().create(data)
+        add_ingredients_to_recipe(new_recipe, ingredients)
+
+        return new_recipe
 
     def update(self, data, recipe):
         tags = data.pop('tags')

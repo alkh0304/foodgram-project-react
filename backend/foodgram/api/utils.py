@@ -6,6 +6,8 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 
+from recipes.models import RecipeIngredient, Recipe
+
 
 def convert_pdf(data: list, title: str) -> TextIO:
     """Конвертирует данные в pdf-файл при помощи ReportLab."""
@@ -36,3 +38,16 @@ def convert_pdf(data: list, title: str) -> TextIO:
     buffer.seek(0)
 
     return buffer
+
+
+def add_ingredients_to_recipe(recipe: Recipe, ingredients: dict) -> None:
+    RecipeIngredient.objects.bulk_create(
+            [
+                RecipeIngredient(
+                    ingredient_id=ingredient['ingredient']['id'],
+                    quantity=ingredient['quantity'],
+                    recipe=recipe
+                )
+                for ingredient in ingredients
+            ]
+        )
