@@ -190,7 +190,7 @@ class RecipeViewset(viewsets.ModelViewSet):
             'ingredient__name', 'ingredient__measurement_unit'
         ).order_by(
             'ingredient__name'
-        ).annotate(ingredient_total=Sum('quantity'))
+        ).annotate(ingredient_total=Sum('amount'))
 
         file = convert_pdf(ingredients, 'Список покупок')
 

@@ -27,7 +27,7 @@ class TagInline(admin.TabularInline):
 
 
 class RecipeIngredientAdmin(admin.ModelAdmin):
-    list_display = ('id', 'recipe', 'ingredient', 'quantity')
+    list_display = ('id', 'recipe', 'ingredient', 'amount')
     search_fields = ('recipe__name', 'ingredient__name')
     inline = [IngredientInline, ]
 
