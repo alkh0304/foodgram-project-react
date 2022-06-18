@@ -27,12 +27,6 @@ class UserRegistationSerializer(serializers.ModelSerializer):
                 f'Имя {value} не может быть использованно')
         return value
 
-    def create(self, validated_data):
-        user = CustomUser.objects.create_user(**validated_data)
-        user.set_password(validated_data['password'])
-        user.save()
-        return user
-
 
 class UserSerializer(UserRegistationSerializer):
     """Сериализатор модели CustomUserModels."""

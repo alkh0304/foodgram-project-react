@@ -32,6 +32,11 @@ class UserViewSet(viewsets.ModelViewSet):
     search_fields = ['username']
     lookup_field = 'username'
 
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        instance.set_password(instance.password)
+        instance.save()
+
     def get_permissions(self):
         if self.action in ('list', 'create'):
             permission_classes = [permissions.AllowAny]
