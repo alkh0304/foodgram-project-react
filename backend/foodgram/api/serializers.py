@@ -141,9 +141,25 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return new_recipe
 
     def update(self, instance, validated_data):
-        RecipeIngredient.objects.filter(recipe=instance).delete()
-        self.create_ingredients(validated_data.pop('ingredients'), instance)
-        return super().update(instance, validated_data)
+        """
+        Функция для обновления существующего рецепта.
+        """
+
+        instance.name = validated_data.get('name', instance.name)
+        instance.text = validated_data.get('text', instance.text)
+        instance.image = validated_data.get('image', instance.image)
+        instance.cooking_time = (
+            validated_data.get('cooking_time', instance.cooking_time)
+        )
+        instance.tags.set(validated_data.get('tags', instance.tags))
+        instance.ingredients.clear()
+        instance.save()
+
+        add_ingredients_to_recipe(instance,
+                                  validated_data['ingredient_recipe'])
+        instance.save()
+
+        return instance
 
     def validate(self, data):
         recipe_ingredients = self.initial_data.get('ingredients')
