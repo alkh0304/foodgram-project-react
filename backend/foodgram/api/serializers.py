@@ -162,12 +162,12 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return recipe
 
     def validate(self, data):
-        recipe_ingredients = data['ingredients']
-        unique_ingredients = []
+        recipe_ingredients = data.pop('ingredients')
+        unique_ingredients = set()
         for ingredient in recipe_ingredients:
-            ingredient_id = ingredient['id']
-            if ingredient_id not in unique_ingredients:
-                unique_ingredients.append(ingredient_id)
+            ingredient_name = ingredient['ingredient']
+            if ingredient_name not in unique_ingredients:
+                unique_ingredients.add(ingredient_name)
             else:
                 raise serializers.ValidationError(
                     'Ингредиенты не должны повторяться!')
