@@ -182,7 +182,6 @@ class RecipeViewSerializer(serializers.ModelSerializer):
         read_only=True, many=True, source='ingredient_recipe')
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_list = serializers.SerializerMethodField()
-    image = Base64ImageField(max_length=None, use_url=True)
 
     class Meta:
         model = Recipe
@@ -209,8 +208,6 @@ class RecipeViewSerializer(serializers.ModelSerializer):
 
 class TinyRecipeSerializer(serializers.ModelSerializer):
     """Получение данных о рецептах для списка покупок и подписок."""
-    image = Base64ImageField(max_length=None, use_url=True)
-
     class Meta:
         model = Recipe
         fields = ('name', 'image', 'cooking_time', 'id')
