@@ -186,7 +186,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 class RecipeViewSerializer(serializers.ModelSerializer):
     """Сериалиализатор просмотра рецептов."""
     author = UserRegistationSerializer(read_only=True)
-    tag = TagSerializer(many=True)
+    tags = TagSerializer(many=True)
     ingredients = RecipeIngredientSerializer(
         read_only=True, many=True, source='ingredient_recipe')
     is_favorited = serializers.SerializerMethodField()
@@ -195,7 +195,7 @@ class RecipeViewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recipe
-        fields = ('tag', 'author', 'ingredients', 'is_favorited',
+        fields = ('tags', 'author', 'ingredients', 'is_favorited',
                   'is_in_shopping_cart', 'name', 'image', 'text',
                   'cooking_time', 'id')
 
