@@ -135,18 +135,6 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
     def create(self, vaidated_data):
         ingredients = self.initial_data.pop('ingredients')
-        ingredient_names = set()
-        for ingredient in ingredients:
-            name = ingredient['ingredient']
-            if name in ingredient_names:
-                raise serializers.ValidationError(
-                    'Не могут быть одинаковые ингредиенты для одного рецепта!'
-                )
-            ingredient_names.add(name)
-            if ingredient['amount'] < 0:
-                raise serializers.ValidationError(
-                    'Количество ингредиента не может быть отрицательным!'
-                )
         image = self.initial_data.pop('image')
         tags = self.initial_data.pop('tags')
         recipe = Recipe.objects.create(image=image, **vaidated_data)
