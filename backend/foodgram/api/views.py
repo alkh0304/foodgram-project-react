@@ -157,13 +157,18 @@ class RecipeViewset(viewsets.ModelViewSet):
         url_path='download_shopping_cart'
     )
     def download_shopping_cart(self, request):
-        ingredients = RecipeIngredient.objects.filter(
-            recipe__shopping_list__user=request.user
-        ).values(
-            'ingredient__name', 'ingredient__measurement_unit'
-        ).order_by(
-            'ingredient__name'
-        ).annotate(ingredient_total=Sum('amount'))
+        user = request.user
+        user_list = (RecipeIngredient.objects.
+                     prefetch_related('ingredient', 'recipe').
+                     filter(recipe__shopping_list=user).
+                     values('ingredient__id').
+                     order_by('ingredient__id'))
+
+        ingredients = (
+            user_list.annotate(amount=Sum('quantity')).values_list(
+                'ingredient__name', 'ingredient__measurement_unit', 'amount'
+            )
+        )
 
         file = convert_pdf(ingredients, 'Список покупок')
 
