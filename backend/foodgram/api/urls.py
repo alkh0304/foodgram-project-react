@@ -9,11 +9,13 @@ router_v1.register('ingredients', views.IngredientViewset,
                    basename='ingredient')
 router_v1.register('recipes', views.RecipeViewset, basename='recipe')
 router_v1.register('users', views.UserViewSet, basename='users')
-router_v1.register('users/(?P<id>[^/.]+)/subscribe', views.SubscriptionViewSet,
-                   basename='subscription')
 
 urlpatterns = [
     path('', include(router_v1.urls)),
     path('', include('djoser.urls')),
     path('auth/', include('djoser.urls.authtoken')),
+    path('users/subscriptions/', views.SubscriptionListView.as_view(),
+         name='subscriptions'),
+    path('users/<int:user_id>/subscribe/', views.SubscriptionViewSet.as_view(),
+         name='subscribe'),
 ]

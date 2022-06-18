@@ -26,27 +26,27 @@ class UserRegistationSerializer(DjoserUserSerializer):
         return Subscription.objects.filter(user=user, author=obj.id).exists()
 
 
-class SubscriptionSerializer(serializers.ModelSerializer):
+class SubscriptionSerializer(DjoserUserSerializer):
     """Сериализатор подписки."""
-    author = serializers.SlugRelatedField(
-        read_only=True, slug_field='username',
-        default=serializers.CurrentUserDefault()
-    )
-    user = serializers.SlugRelatedField(
-        queryset=CustomUser.objects.all(),
-        slug_field='username',
-    )
+    recipes = serializers.SerializerMethodField(read_only=True)
+    recipes_count = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
-        fields = ('username', 'email', 'first_name',
-                  'last_name', 'id')
-        model = Subscription
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Subscription.objects.all(),
-                fields=['user', 'author']
-            ),
-        ]
+        model = CustomUser
+        fields = ('email', 'id', 'username', 'first_name', 'last_name',
+                  'is_subscribed', 'recipes', 'recipes_count')
+
+    @staticmethod
+    def get_recipes_count(obj):
+        return obj.recipes.count()
+
+    def get_recipes(self, obj):
+        request = self.context.get('request')
+        recipes = obj.recipes.all()
+        recipes_limit = request.query_params.get('recipes_limit')
+        if recipes_limit:
+            recipes = recipes[:int(recipes_limit)]
+        return TinyRecipeSerializer(recipes, many=True).data
 
     def validate(self, data):
         """Проверка подписки на себя и повторной подписки."""
