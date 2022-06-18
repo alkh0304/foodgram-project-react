@@ -146,7 +146,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     def create(self, data):
         tags = data.pop('tags')
         image = data.pop('image')
-        ingredients = data.pop('ingredients')
+        ingredients = self.initial_data.pop('ingredients')
         recipe = Recipe.objects.create(image=image, **data)
         recipe.tags.set(tags)
         self.create_ingredients(ingredients, recipe)
@@ -154,7 +154,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
     def update(self, data, recipe):
         tags = data.pop('tags')
-        ingredients = data.pop('ingredients')
+        ingredients = self.initial_data.pop('ingredients')
         recipe.tags.clear()
         recipe.tags.set(tags)
         recipe.ingredients.all().delete()
