@@ -1,3 +1,4 @@
+from django.db.models import Exists
 from django.shortcuts import get_object_or_404
 from djoser.serializers import UserSerializer, UserCreateSerializer
 from rest_framework import serializers
@@ -59,45 +60,77 @@ class SubscriptionListSerializer(serializers.ModelSerializer):
             author=obj.author, user=request.user
         ).exists()
 
-    def get_recipes_count(self, obj):
-        return obj.author.recipes.count()
-
     def get_recipes(self, obj):
         request = self.context.get('request')
-        if request.GET.get('recipes_limit'):
-            recipes_limit = int(request.GET.get('recipes_limit'))
-            queryset = Recipe.objects.filter(
-                author=obj.author)[:recipes_limit]
-        else:
-            queryset = Recipe.objects.filter(
-                author=obj.author)
-        serializer = TinyRecipeSerializer(
-            queryset, read_only=True, many=True
-        )
-        return serializer.data
+        limit = request.query_params.get('recipes_limit')
+
+        recipes = obj.recipes.only('id', 'name', 'image', 'cooking_time')
+
+        if limit:
+            recipes = recipes[:int(limit)]
+
+        return TinyRecipeSerializer(recipes, many=True).data
+
+    def get_recipes_count(self, obj):
+        return obj.recipes.count()
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
     """Сериализатор подписки."""
+    queryset = Subscription.objects.all()
+    author = serializers.PrimaryKeyRelatedField(queryset=queryset)
+    user = serializers.PrimaryKeyRelatedField(queryset=queryset)
+    type_list = serializers.CharField()
+
     class Meta:
         model = Subscription
-        fields = ('user', 'author')
+        fields = (
+            'user',
+            'author',
+            'type_list'
+        )
 
     def validate(self, data):
-        get_object_or_404(CustomUser, username=data['author'])
-        if self.context['request'].user == data['author']:
-            raise serializers.ValidationError('Сам на себя подписываешься!')
-        if Subscription.objects.filter(
-                user=self.context['request'].user,
-                author=data['author']
-        ):
-            raise serializers.ValidationError('Уже подписан')
+        user = data['user']
+        author = data['author']
+
+        if user == author:
+            raise serializers.ValidationError(
+                'Нельзя подписываться на самого себя.'
+            )
+
+        if Subscription.objects.filter(user=user, author=author).exists():
+            raise serializers.ValidationError(
+                f'Вы уже подписаны на пользователя {author}.'
+            )
+
         return data
 
+    def create(self, validated_data):
+        user = validated_data['user']
+        author = validated_data['author']
+
+        Subscription.objects.create(
+            user=user,
+            author=author
+        )
+
+        return user
+
     def to_representation(self, instance):
+        """
+        Функция для получения представления объекта подписки в виде,
+        запрошенном в ТЗ. (аналогично представлению в списке подписок)
+        """
+
+        data = instance.subscribing.annotate(
+            is_subscribed=Exists(CustomUser.objects.all())).last()
+
         return SubscriptionListSerializer(
-            instance.author,
-            context={'request': self.context.get('request')}
+            data,
+            context={
+                'request': self.context.get('request'),
+            }
         ).data
 
 
