@@ -7,7 +7,7 @@ from recipes.models import (FavoriteRecipe, Ingredient, Recipe,
                             RecipeIngredient, ShoppingList, Tag)
 from users.models import CustomUser, Subscription
 from .fields import Base64ImageField
-from .utils import add_ingredients_to_recipe
+from .utils import bulk_create_ingredients
 
 
 class UserRegistationSerializer(UserSerializer):
@@ -31,91 +31,64 @@ class UserCreationSerializer(UserCreateSerializer):
     """ Сериализация пользователя при регистрации """
     class Meta:
         model = CustomUser
-        fields = (
-            'email', 'username', 'first_name', 'last_name', 'password'
-        )
+        fields = ('email', 'username', 'first_name', 'last_name',
+                  'password')
 
 
 class SubscriptionListSerializer(serializers.ModelSerializer):
-    """ Сериализация списка на кого подписан пользователь"""
+    """ Сериализация подписок и списка подписок"""
     email = serializers.ReadOnlyField(source='author.email')
     id = serializers.ReadOnlyField(source='author.id')
-    username = serializers.ReadOnlyField(source='author.username')
     first_name = serializers.ReadOnlyField(source='author.first_name')
     last_name = serializers.ReadOnlyField(source='author.last_name')
-    is_subscribed = serializers.SerializerMethodField()
+    username = serializers.ReadOnlyField(source='author.username')
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
+    is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
         model = Subscription
-        fields = (
-            'email', 'id', 'username', 'first_name', 'last_name',
-            'is_subscribed', 'recipes', 'recipes_count'
-        )
+        fields = ('email', 'id', 'first_name', 'last_name', 'username',
+                  'recipes', 'recipes_count', 'is_subscribed')
+
+    def to_internal_value(self, data):
+        return data
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
-        return Subscription.objects.filter(
-            author=obj.author, user=request.user
-        ).exists()
+        return Subscription.objects.filter(author=obj.author,
+                                           user=request.user).exists()
 
-    def get_recipes(self, obj):
+    def get_recipes_count(self, data):
+        return Recipe.objects.filter(
+                author=data.author).count()
+
+    def get_recipes(self, data):
         request = self.context.get('request')
-        limit = request.query_params.get('recipes_limit')
-
-        recipes = obj.recipes.only('id', 'name', 'image', 'cooking_time')
-
-        if limit:
-            recipes = recipes[:int(limit)]
-
-        return TinyRecipeSerializer(recipes, many=True).data
-
-    def get_recipes_count(self, obj):
-        return obj.recipes.count()
-
-
-class SubscriptionSerializer(serializers.ModelSerializer):
-    """Сериализатор подписки."""
-    queryset = Subscription.objects.all()
-    author = serializers.PrimaryKeyRelatedField(queryset=queryset)
-    user = serializers.PrimaryKeyRelatedField(queryset=queryset)
-    type_list = serializers.CharField()
-
-    class Meta:
-        model = Subscription
-        fields = (
-            'user',
-            'author',
-            'type_list'
-        )
-
-    def validate(self, data):
-        user = data['user']
-        author = data['author']
-
-        if user == author:
-            raise serializers.ValidationError(
-                'Нельзя подписываться на самого себя.'
-            )
-
-        if Subscription.objects.filter(user=user, author=author).exists():
-            raise serializers.ValidationError(
-                f'Вы уже подписаны на пользователя {author}.'
-            )
-
-        return data
+        if request.GET.get('recipes_limit'):
+            limit = int(request.GET.get('recipes_limit'))
+            queryset = Recipe.objects.filter(
+                author=data.author)[:limit]
+        else:
+            queryset = Recipe.objects.filter(author=data.author)
+        serializer = TinyRecipeSerializer(queryset, read_only=True,
+                                          many=True)
+        return serializer.data
 
     def create(self, validated_data):
-        user = validated_data['user']
-        author = validated_data['author']
+        return Subscription.objects.create(**validated_data)
 
-        Subscription.objects.create(
-            user=user,
-            author=author
-        )
+    def validate(self, data):
+        author = data['author_id']
+        user = data['user_id']
+        if user == author:
+            raise serializers.ValidationError(
+                'Оформление подписки на себя - недопустимо.')
+        if Subscription.objects.filter(user=user, author=author).exists():
+            raise serializers.ValidationError(
+                'Вы уже подписаны на этого пользователя.')
 
-        return user
+        return data
 
 
 class IngredientSerielizer(serializers.ModelSerializer):
@@ -181,12 +154,12 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         RecipeIngredient.objects.bulk_create(recipe_ingredients)
         return recipe
 
-    def create(self, data):
-        ingredients = data.pop('ingredient_recipe')
-        new_recipe = super().create(data)
-        add_ingredients_to_recipe(new_recipe, ingredients)
+    def create(self, obj):
+        ingredients = obj.pop('ingredient_recipe')
+        created_recipe = super().create(obj)
+        bulk_create_ingredients(created_recipe, ingredients)
 
-        return new_recipe
+        return created_recipe
 
     def update(self, obj, validated_data):
         obj.image = validated_data.get('image', obj.image)
@@ -199,8 +172,8 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         obj.ingredients.clear()
         obj.save()
 
-        add_ingredients_to_recipe(obj,
-                                  validated_data['ingredient_recipe'])
+        bulk_create_ingredients(obj,
+                                validated_data['ingredient_recipe'])
         obj.save()
 
         return obj

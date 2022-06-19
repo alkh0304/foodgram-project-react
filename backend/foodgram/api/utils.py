@@ -36,14 +36,8 @@ def convert_pdf(data: list, title: str) -> TextIO:
     return buffer
 
 
-def add_ingredients_to_recipe(recipe: Recipe, ingredients: dict) -> None:
+def bulk_create_ingredients(recipe: Recipe, ingredients: dict) -> None:
     RecipeIngredient.objects.bulk_create(
-            [
-                RecipeIngredient(
-                    ingredient_id=ingredient['ingredient']['id'],
-                    amount=ingredient['amount'],
-                    recipe=recipe
-                )
-                for ingredient in ingredients
-            ]
-        )
+            [RecipeIngredient(ingredient_id=ingredient['ingredient']['id'],
+                              amount=ingredient['amount'], recipe=recipe)
+                for ingredient in ingredients])

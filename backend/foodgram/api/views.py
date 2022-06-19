@@ -2,10 +2,9 @@ from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet as DjoserUserViewSet
-from rest_framework import permissions, status, viewsets, views
+from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
-from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 
 from recipes.models import (FavoriteRecipe, Ingredient, Recipe,
@@ -16,7 +15,7 @@ from .pagination import RecipePagination
 from .permissions import AuthorOrReadOnly
 from .serializers import (IngredientSerielizer,
                           RecipeCreateSerializer, RecipeViewSerializer,
-                          SubscriptionSerializer, SubscriptionListSerializer,
+                          SubscriptionListSerializer,
                           TagSerializer, TinyRecipeSerializer)
 from .utils import convert_pdf
 
@@ -25,83 +24,36 @@ class UserViewSet(DjoserUserViewSet):
     """CRUD user models."""
     pagination_class = RecipePagination
 
+    @action(detail=False,
+            methods=['GET'],
+            permission_classes=[permissions.IsAuthenticated])
+    def subscriptions(self, request):
+        serializer = SubscriptionListSerializer(self.paginate_queryset(
+            Subscription.objects.filter(user=request.user)), many=True,
+            context={'request': request})
+        return self.get_paginated_response(serializer.data)
+
     @action(
-        methods=('POST',),
         detail=True,
+        methods=['POST', 'DELETE'],
         permission_classes=[permissions.IsAuthenticated],
     )
     def subscribe(self, request, id=None):
-        request.data['user_id'] = request.user.id
-        request.data['author_id'] = int(id)
-        serializer = SubscriptionSerializer(
-            data=request.data,
-            context={'request': request},
-        )
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        return Response(
-            serializer.data,
-            status=status.HTTP_201_CREATED,
-        )
-
-    @subscribe.mapping.delete
-    def unsubscribe(self, request, id=None):
-        Subscription.objects.filter(
-            user=request.user,
-            author=get_object_or_404(CustomUser, id=id)
-        ).delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-    @action(detail=False,
-            permission_classes=[permissions.IsAuthenticated])
-    def subscriptions(self, request):
-        serializer = SubscriptionListSerializer(
-            self.paginate_queryset(Subscription.objects.filter(
-                user=request.user)),
-            many=True,
-            context={'request': request}
-        )
-        return self.get_paginated_response(serializer.data)
-
-
-class SubscriptionViewSet(ListAPIView):
-    serializer_class = SubscriptionSerializer
-    pagination_class = RecipePagination
-    permission_classes = [permissions.IsAuthenticated]
-    model_class = CustomUser
-
-    # @action(detail=False,
-    #         permission_classes=[permissions.IsAuthenticated],)
-    # def subscriptions(self, request):
-    #     serializer = SubscriptionListSerializer(
-    #         self.paginate_queryset(Subscription.objects.filter(
-    #             user=request.user)),
-    #         many=True,
-    #         context={'request': request}
-    #     )
-    #     return self.get_paginated_response(serializer.data)
-
-
-class SubscribeView(views.APIView):
-    pagination_class = RecipePagination
-    permission_classes = [permissions.IsAuthenticated]
-    serializer = SubscriptionListSerializer
-
-    def get_queryset(self):
-        user = self.request.user
-        return user.subscriber
-
-    def get_serializer(self, id):
-        return SubscriptionSerializer(
-            data={
-                'author': id,
-                'user': self.request.user.id,
-                'type_list': 'shopping',
-            },
-            context={
-                'request': self.request,
-            }
-        )
+        if request.method == 'POST':
+            request.data['user_id'] = request.user.id
+            request.data['author_id'] = int(id)
+            serializer = SubscriptionListSerializer(data=request.data,
+                                                    context={
+                                                        'request': request},)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            current_subscription = get_object_or_404(
+                Subscription, author=get_object_or_404(CustomUser, id=id),
+                user=request.user)
+            self.perform_destroy(current_subscription)
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class IngredientViewset(viewsets.ModelViewSet):
