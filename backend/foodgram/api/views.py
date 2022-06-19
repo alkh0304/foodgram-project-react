@@ -85,6 +85,9 @@ class RecipeViewset(viewsets.ModelViewSet):
             return RecipeCreateSerializer
         return RecipeViewSerializer
 
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+
     def new_recipe(self, model, request, pk):
         user = self.request.user
         current_recipe = get_object_or_404(Recipe, pk=pk)
