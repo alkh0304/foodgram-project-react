@@ -30,10 +30,9 @@ class UserViewSet(DjoserUserViewSet):
     @action(
         detail=False,
         methods=['GET'],
-        permission_classes=[permissions.IsAuthenticated],
-        url_path='user',
+        permission_classes=[permissions.IsAuthenticated]
     )
-    def user(self, request):
+    def users(self, request):
         serializer = UserRegistationSerializer(
             super().get_queryset(), many=True, context={
                 'request': request
