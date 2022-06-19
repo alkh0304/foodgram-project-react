@@ -16,7 +16,7 @@ from .permissions import AuthorOrReadOnly
 from .serializers import (IngredientSerielizer,
                           RecipeCreateSerializer, RecipeViewSerializer,
                           SubscriptionSerializer, TagSerializer,
-                          TinyRecipeSerializer, UserRegistationSerializer)
+                          UserRegistationSerializer)
 from .utils import convert_pdf
 
 
@@ -85,25 +85,21 @@ class RecipeViewset(viewsets.ModelViewSet):
             return RecipeCreateSerializer
         return RecipeViewSerializer
 
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
-
-    def new_recipe(self, model, request, pk):
-        user = self.request.user
-        current_recipe = get_object_or_404(Recipe, pk=pk)
-        if model.objects.filter(recipe=current_recipe, user=user).exists():
-            return Response(
-                'Рецепт уже добавлен', status=status.HTTP_400_BAD_REQUEST)
-        model.objects.create(recipe=current_recipe, user=user)
-        serializer = TinyRecipeSerializer(current_recipe)
-        return Response(data=serializer.data, status=status.HTTP_201_CREATED)
-
-    def remove_recipe(self, model, request, pk):
-        user = self.request.user
-        current_recipe = get_object_or_404(Recipe, pk=pk)
-        obj = get_object_or_404(model, recipe=current_recipe, user=user)
-        obj.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    @staticmethod
+    def post_or_delete(request, model, serializer, pk):
+        if request.method != 'POST':
+            get_object_or_404(
+                model,
+                user=request.user,
+                recipe=get_object_or_404(Recipe, id=pk)
+            ).delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        serializer = serializer(
+            data={'user': request.user.id, 'recipe': pk},
+            context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(
         detail=True,
