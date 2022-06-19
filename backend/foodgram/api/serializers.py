@@ -1,13 +1,13 @@
 from django.db.models import Exists
 from django.shortcuts import get_object_or_404
 from djoser.serializers import UserSerializer, UserCreateSerializer
-from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
 from recipes.models import (FavoriteRecipe, Ingredient, Recipe,
                             RecipeIngredient, ShoppingList, Tag)
 from users.models import CustomUser, Subscription
+from .fields import Base64ImageField
 from .utils import add_ingredients_to_recipe
 
 
@@ -269,11 +269,6 @@ class RecipeViewSerializer(serializers.ModelSerializer):
             return ShoppingList.objects.filter(
                 user=user, recipe=obj).exists()
         return False
-
-    def to_representation(self, obj):
-        data = super().to_representation(obj)
-        data["image"] = obj.image.url
-        return data
 
 
 class TinyRecipeSerializer(serializers.ModelSerializer):
