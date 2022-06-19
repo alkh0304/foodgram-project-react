@@ -1,12 +1,12 @@
 from django.shortcuts import get_object_or_404
 from djoser.serializers import UserSerializer as DjoserUserSerializer
-from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
 from recipes.models import (FavoriteRecipe, Ingredient, Recipe,
                             RecipeIngredient, ShoppingList, Tag)
 from users.models import CustomUser, Subscription
+from .fields import Base64ImageField
 from .utils import add_ingredients_to_recipe
 
 
@@ -133,14 +133,12 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         RecipeIngredient.objects.bulk_create(recipe_ingredients)
         return recipe
 
-    def create(self, vaidated_data):
-        ingredients = self.initial_data.pop('ingredients')
-        image = vaidated_data.pop('image')
-        tags = vaidated_data.pop('tags')
-        recipe = Recipe.objects.create(image=image, **vaidated_data)
-        recipe.ingredient_recipe.set(tags)
-        self.create_ingredients(recipe, ingredients)
-        return recipe
+    def create(self, data):
+        ingredients = data.pop('ingredient_recipe')
+        new_recipe = super().create(data)
+        add_ingredients_to_recipe(new_recipe, ingredients)
+
+        return new_recipe
 
     def update(self, obj, validated_data):
         obj.image = validated_data.get('image', obj.image)
