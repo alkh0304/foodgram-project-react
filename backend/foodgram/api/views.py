@@ -2,9 +2,10 @@ from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet as DjoserUserViewSet
-from rest_framework import permissions, status, viewsets
+from rest_framework import permissions, status, viewsets, views
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
+from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 
 from recipes.models import (FavoriteRecipe, Ingredient, Recipe,
@@ -27,59 +28,40 @@ class UserViewSet(DjoserUserViewSet):
     serializer = UserRegistationSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
-    @action(
-        detail=False,
-        methods=['GET'],
-        permission_classes=[permissions.IsAuthenticated]
-    )
-    def users(self, request):
-        serializer = UserRegistationSerializer(
-            super().get_queryset(), many=True, context={
-                'request': request
-            }
-        )
-        return self.get_paginated_response(serializer.data)
 
-    @action(
-        detail=False,
-        methods=['GET'],
-        permission_classes=[permissions.IsAuthenticated],
-    )
-    def subscriptions(self, request, pk=None):
-        subscriptions_list = self.paginate_queryset(
-            CustomUser.objects.filter(author__user=request.user)
-        )
+class SubscriptionViewSet(ListAPIView):
+    serializer_class = SubscriptionSerializer
+    pagination_class = RecipePagination
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        return user.user.all()
+
+
+class SubscribeView(views.APIView):
+    pagination_class = RecipePagination
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk):
+        author = get_object_or_404(CustomUser, pk=pk)
+        user = self.request.user
+        data = {'author': author.id, 'user': user.id}
         serializer = SubscriptionListSerializer(
-            subscriptions_list, many=True, context={
-                'request': request
-            }
-        )
-        return self.get_paginated_response(serializer.data)
-
-    @action(
-        detail=True,
-        methods=['POST', 'DELETE'],
-        permission_classes=[permissions.IsAuthenticated]
-    )
-    def subscribe(self, request, id):
-        if request.method != 'POST':
-            subscription = get_object_or_404(
-                Subscription,
-                author=get_object_or_404(CustomUser, id=id),
-                user=request.user
-            )
-            self.perform_destroy(subscription)
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        serializer = SubscriptionSerializer(
-            data={
-                'user': request.user.id,
-                'author': get_object_or_404(CustomUser, id=id).id
-            },
-            context={'request': request}
+            data=data, context={'request': request}
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+
+    def delete(self, request, pk):
+        author = get_object_or_404(CustomUser, pk=pk)
+        user = self.request.user
+        subscription = get_object_or_404(
+            Subscription, user=user, author=author
+        )
+        subscription.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class IngredientViewset(viewsets.ModelViewSet):
