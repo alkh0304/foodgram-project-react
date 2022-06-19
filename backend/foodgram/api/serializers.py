@@ -241,4 +241,4 @@ class TinyRecipeSerializer(serializers.ModelSerializer):
     """Получение данных о рецептах для списка покупок и подписок."""
     class Meta:
         model = Recipe
-        fields = ('name', 'image', 'cooking_time', 'id')
+        fields = ('id', 'name', 'image', 'cooking_time')
