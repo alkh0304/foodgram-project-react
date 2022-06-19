@@ -55,7 +55,7 @@ class UserViewSet(DjoserUserViewSet):
     @action(detail=False,
             permission_classes=[permissions.IsAuthenticated])
     def subscriptions(self, request):
-        serializer = SubscriptionSerializer(
+        serializer = SubscriptionListSerializer(
             self.paginate_queryset(Subscription.objects.filter(
                 user=request.user)),
             many=True,

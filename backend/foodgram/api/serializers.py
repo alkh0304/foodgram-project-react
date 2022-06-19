@@ -1,4 +1,3 @@
-from django.db.models import Exists
 from django.shortcuts import get_object_or_404
 from djoser.serializers import UserSerializer, UserCreateSerializer
 from rest_framework import serializers
@@ -24,7 +23,8 @@ class UserRegistationSerializer(UserSerializer):
         user = self.context.get('request').user
         if user.is_anonymous:
             return False
-        return Subscription.objects.filter(user=user, author=obj.id).exists()
+        return Subscription.objects.filter(
+            user=user, author=obj.id).exists()
 
 
 class UserCreationSerializer(UserCreateSerializer):
@@ -116,22 +116,6 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         )
 
         return user
-
-    def to_representation(self, instance):
-        """
-        Функция для получения представления объекта подписки в виде,
-        запрошенном в ТЗ. (аналогично представлению в списке подписок)
-        """
-
-        data = instance.subscriber.annotate(
-            is_subscribed=Exists(CustomUser.objects.all())).last()
-
-        return SubscriptionListSerializer(
-            data,
-            context={
-                'request': self.context.get('request'),
-            }
-        ).data
 
 
 class IngredientSerielizer(serializers.ModelSerializer):

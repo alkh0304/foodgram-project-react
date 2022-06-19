@@ -17,12 +17,6 @@ class CustomUser(AbstractUser):
     last_name = models.CharField('Фамилия', max_length=150, blank=True)
     date_joined = models.DateTimeField('Дата создания', default=timezone.now)
     bio = models.CharField('Биография', max_length=200, blank=True, default=1)
-    subscribing = models.ManyToManyField(
-        to='self',
-        through='Subscription',
-        symmetrical=False,
-        verbose_name='Подписчики',
-    )
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = [
