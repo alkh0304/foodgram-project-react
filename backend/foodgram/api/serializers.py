@@ -55,11 +55,11 @@ class SubscriptionListSerializer(serializers.ModelSerializer):
         queryset = self.context.get('request')
         recipes_limit = queryset.query_params.get('recipes_limit')
         if not recipes_limit:
-            return RecipeViewSerializer(
+            return TinyRecipeSerializer(
                 following.author.all(),
                 many=True, context={'request': queryset}
             ).data
-        return RecipeViewSerializer(
+        return TinyRecipeSerializer(
             following.author.all()[:int(recipes_limit)], many=True,
             context={'request': queryset}
         ).data
