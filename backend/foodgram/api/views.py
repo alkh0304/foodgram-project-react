@@ -17,16 +17,51 @@ from .permissions import AuthorOrReadOnly
 from .serializers import (IngredientSerielizer,
                           RecipeCreateSerializer, RecipeViewSerializer,
                           SubscriptionSerializer, SubscriptionListSerializer,
-                          TagSerializer, TinyRecipeSerializer,
-                          UserRegistationSerializer)
+                          TagSerializer, TinyRecipeSerializer)
 from .utils import convert_pdf
 
 
 class UserViewSet(DjoserUserViewSet):
     """CRUD user models."""
     pagination_class = RecipePagination
-    serializer = UserRegistationSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    @action(
+        methods=('POST',),
+        detail=True,
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    def subscribe(self, request, id=None):
+        request.data['user_id'] = request.user.id
+        request.data['author_id'] = int(id)
+        serializer = SubscriptionSerializer(
+            data=request.data,
+            context={'request': request},
+        )
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+        )
+
+    @subscribe.mapping.delete
+    def unsubscribe(self, request, id=None):
+        Subscription.objects.filter(
+            user=request.user,
+            author=get_object_or_404(CustomUser, id=id)
+        ).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=False,
+            permission_classes=[permissions.IsAuthenticated])
+    def subscriptions(self, request):
+        serializer = SubscriptionSerializer(
+            self.paginate_queryset(Subscription.objects.filter(
+                user=request.user)),
+            many=True,
+            context={'request': request}
+        )
+        return self.get_paginated_response(serializer.data)
 
 
 class SubscriptionViewSet(ListAPIView):
@@ -35,16 +70,16 @@ class SubscriptionViewSet(ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
     model_class = CustomUser
 
-    @action(detail=False,
-            permission_classes=[permissions.IsAuthenticated],)
-    def subscriptions(self, request):
-        serializer = SubscriptionListSerializer(
-            self.paginate_queryset(Subscription.objects.filter(
-                user=request.user)),
-            many=True,
-            context={'request': request}
-        )
-        return self.get_paginated_response(serializer.data)
+    # @action(detail=False,
+    #         permission_classes=[permissions.IsAuthenticated],)
+    # def subscriptions(self, request):
+    #     serializer = SubscriptionListSerializer(
+    #         self.paginate_queryset(Subscription.objects.filter(
+    #             user=request.user)),
+    #         many=True,
+    #         context={'request': request}
+    #     )
+    #     return self.get_paginated_response(serializer.data)
 
 
 class SubscribeView(views.APIView):
