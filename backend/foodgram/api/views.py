@@ -1,4 +1,3 @@
-from django.db.models import Exists, OuterRef
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -36,26 +35,15 @@ class SubscriptionViewSet(ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
     model_class = CustomUser
 
-    @action(
-        methods=['GET', ],
-        url_path='subscriptions',
-        detail=False,
-    )
+    @action(detail=False,
+            permission_classes=[permissions.IsAuthenticated],)
     def subscriptions(self, request):
-        user = request.user
-        queryset = user.subscribing.annotate(
-            is_subscribed=Exists(
-                Subscription.objects.filter(user=user, author=OuterRef('pk'))
-            )
-        ).prefetch_related('recipes').all()
-
-        page = self.paginate_queryset(queryset)
-
-        if page:
-            serializer = self.get_serializer(page, many=True)
-
-        serializer = self.get_serializer(queryset, many=True)
-
+        serializer = SubscriptionListSerializer(
+            self.paginate_queryset(Subscription.objects.filter(
+                user=request.user)),
+            many=True,
+            context={'request': request}
+        )
         return self.get_paginated_response(serializer.data)
 
 
