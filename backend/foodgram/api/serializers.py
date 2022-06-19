@@ -17,7 +17,7 @@ class UserRegistationSerializer(UserSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ('username', 'email', 'first_name',
+        fields = ('username', 'email', 'first_name', 'id',
                   'last_name', 'bio', 'date_joined', 'is_subscribed')
 
     def get_is_subscribed(self, obj):
