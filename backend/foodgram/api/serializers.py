@@ -35,7 +35,7 @@ class UserCreationSerializer(UserCreateSerializer):
         )
 
 
-class SubscriptionListSerializer(UserRegistationSerializer):
+class SubscriptionListSerializer(serializers.ModelSerializer):
     """ Сериализация списка на кого подписан пользователь"""
     email = serializers.ReadOnlyField(source='author.email')
     id = serializers.ReadOnlyField(source='author.id')
