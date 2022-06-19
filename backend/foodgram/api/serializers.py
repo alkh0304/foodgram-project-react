@@ -35,7 +35,7 @@ class UserCreationSerializer(UserCreateSerializer):
         )
 
 
-class SubscriptionListSerializer(serializers.ModelSerializer):
+class SubscriptionListSerializer(UserRegistationSerializer):
     """ Сериализация списка на кого подписан пользователь"""
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
