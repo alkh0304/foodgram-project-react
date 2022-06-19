@@ -6,6 +6,7 @@ from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
+from backend.foodgram.users.models import Subscription
 
 from recipes.models import (FavoriteRecipe, Ingredient, Recipe,
                             RecipeIngredient, ShoppingList, Tag)
@@ -15,32 +16,72 @@ from .pagination import RecipePagination
 from .permissions import AuthorOrReadOnly
 from .serializers import (IngredientSerielizer,
                           RecipeCreateSerializer, RecipeViewSerializer,
-                          SubscriptionSerializer, TagSerializer,
-                          TinyRecipeSerializer, UserRegistationSerializer)
+                          SubscriptionSerializer, SubscriptionListSerializer,
+                          TagSerializer, TinyRecipeSerializer,
+                          UserRegistationSerializer)
 from .utils import convert_pdf
 
 
 class UserViewSet(DjoserUserViewSet):
     """CRUD user models."""
-    queryset = CustomUser.objects.all()
-    serializer_class = UserRegistationSerializer
+    pagination_class = RecipePagination
+    serializer = UserRegistationSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
+    @action(
+        detail=False,
+        methods=['GET'],
+        permission_classes=[permissions.IsAuthenticated],
+        url_path='users',
+    )
+    def users(self, request):
+        serializer = UserRegistationSerializer(
+            super().get_queryset(), many=True, context={
+                'request': request
+            }
+        )
+        return self.get_paginated_response(serializer.data)
 
-class SubscriptionViewSet(viewsets.ModelViewSet):
-    """Запросы о подписке на авторов."""
-    permission_classes = [permissions.IsAuthenticated]
-    model_class = CustomUser
-    serializer_class = SubscriptionSerializer
+    @action(
+        detail=False,
+        methods=['GET'],
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    def subscriptions(self, request, pk=None):
+        subscriptions_list = self.paginate_queryset(
+            CustomUser.objects.filter(author__user=request.user)
+        )
+        serializer = SubscriptionListSerializer(
+            subscriptions_list, many=True, context={
+                'request': request
+            }
+        )
+        return self.get_paginated_response(serializer.data)
 
-    def get_queryset(self):
-        current_user = self.request.user
-        return current_user.subscriber.all()
-
-    def perform_create(self, serializer):
-        author = get_object_or_404(CustomUser, pk=self.kwargs.get('pk'))
-        user = self.request.user
-        serializer.save(author=author, user=user)
+    @action(
+        detail=True,
+        methods=['POST', 'DELETE'],
+        permission_classes=[permissions.IsAuthenticated]
+    )
+    def subscribe(self, request, id):
+        if request.method != 'POST':
+            subscription = get_object_or_404(
+                Subscription,
+                author=get_object_or_404(CustomUser, id=id),
+                user=request.user
+            )
+            self.perform_destroy(subscription)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        serializer = SubscriptionSerializer(
+            data={
+                'user': request.user.id,
+                'author': get_object_or_404(CustomUser, id=id).id
+            },
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class IngredientViewset(viewsets.ModelViewSet):
