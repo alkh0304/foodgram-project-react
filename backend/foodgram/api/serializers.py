@@ -233,11 +233,6 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                     'Ингредиенты не должны повторяться!')
         return data
 
-    def to_representation(self, obj):
-        data = super().to_representation(obj)
-        data["image"] = obj.image.url
-        return data
-
 
 class RecipeViewSerializer(serializers.ModelSerializer):
     """Сериалиализатор просмотра рецептов."""
@@ -269,11 +264,6 @@ class RecipeViewSerializer(serializers.ModelSerializer):
             return ShoppingList.objects.filter(
                 user=user, recipe=obj).exists()
         return False
-
-    def to_representation(self, obj):
-        data = super().to_representation(obj)
-        data["image"] = obj.image.url
-        return data
 
 
 class TinyRecipeSerializer(serializers.ModelSerializer):
