@@ -89,7 +89,7 @@ class SubscribeView(views.APIView):
 
     def get_queryset(self):
         user = self.request.user
-        return user.subscribing
+        return user.subscriber
 
     def get_serializer(self, id):
         return SubscriptionSerializer(

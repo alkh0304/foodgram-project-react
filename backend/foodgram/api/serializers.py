@@ -123,7 +123,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         запрошенном в ТЗ. (аналогично представлению в списке подписок)
         """
 
-        data = instance.subscribing.annotate(
+        data = instance.subscriber.annotate(
             is_subscribed=Exists(CustomUser.objects.all())).last()
 
         return SubscriptionListSerializer(
