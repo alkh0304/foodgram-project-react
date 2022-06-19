@@ -64,12 +64,6 @@ class SubscriptionListSerializer(serializers.ModelSerializer):
             context={'request': queryset}
         ).data
 
-    def get_is_subscribed(self, obj):
-        user = self.context.get('request').user
-        if user.is_anonymous:
-            return False
-        return Subscription.objects.filter(user=user, author=obj.id).exists()
-
 
 class SubscriptionSerializer(serializers.ModelSerializer):
     """Сериализатор подписки."""
