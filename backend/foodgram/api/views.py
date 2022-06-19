@@ -59,7 +59,7 @@ class SubscribeView(views.APIView):
     def get_serializer(self, id):
         return SubscriptionSerializer(
             data={
-                'user_author': id,
+                'author': id,
                 'user': self.request.user.id,
                 'type_list': 'shopping',
             },
