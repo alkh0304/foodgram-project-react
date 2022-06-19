@@ -4,11 +4,11 @@ from .models import CustomUser, Subscription
 
 
 class CustomUserAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'username', 'first_name', 'last_name', 'email',
+    list_display = ('id', 'username', 'first_name', 'last_name', 'email',
                     'date_joined', 'subscribers_count')
     list_filter = ('username', 'email')
     search_fields = ('username', 'email')
-    ordering = ('pk',)
+    ordering = ('id',)
     empty_value_display = '--empty--'
 
     def subscribers_count(self, obj):
@@ -16,7 +16,7 @@ class CustomUserAdmin(admin.ModelAdmin):
 
 
 class SubscriptionAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'user', 'author')
+    list_display = ('id', 'user', 'author')
     list_filter = ('user', 'author')
     search_fields = ('user', 'author')
 
