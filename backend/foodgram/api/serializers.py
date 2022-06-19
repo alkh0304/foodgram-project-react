@@ -206,6 +206,11 @@ class RecipeViewSerializer(serializers.ModelSerializer):
                 user=user, recipe=obj).exists()
         return False
 
+    def to_representation(self, obj):
+        data = super().to_representation(obj)
+        data["image"] = obj.image.url
+        return data
+
 
 class TinyRecipeSerializer(serializers.ModelSerializer):
     """Получение данных о рецептах для списка покупок и подписок."""
