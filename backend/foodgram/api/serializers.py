@@ -37,6 +37,11 @@ class UserCreationSerializer(UserCreateSerializer):
 
 class SubscriptionListSerializer(UserRegistationSerializer):
     """ Сериализация списка на кого подписан пользователь"""
+    email = serializers.ReadOnlyField(source='author.email')
+    id = serializers.ReadOnlyField(source='author.id')
+    username = serializers.ReadOnlyField(source='author.username')
+    first_name = serializers.ReadOnlyField(source='author.first_name')
+    last_name = serializers.ReadOnlyField(source='author.last_name')
     recipes = serializers.SerializerMethodField(read_only=True)
     recipes_count = serializers.SerializerMethodField(read_only=True)
 
@@ -47,9 +52,14 @@ class SubscriptionListSerializer(UserRegistationSerializer):
             'is_subscribed', 'recipes', 'recipes_count'
         )
 
-    @staticmethod
-    def get_recipes_count(obj):
-        return obj.recipes.count()
+    def get_is_subscribed(self, obj):
+        request = self.context.get('request')
+        return Subscription.objects.filter(
+            author=obj.author, user=request.user
+        ).exists()
+
+    def get_recipes_count(self, obj):
+        return obj.author.recipes.count()
 
     def get_recipes(self, obj):
         request = self.context.get('request')
@@ -237,4 +247,3 @@ class TinyRecipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time')
-        read_only_fields = ['name', 'image', 'cooking_time']
