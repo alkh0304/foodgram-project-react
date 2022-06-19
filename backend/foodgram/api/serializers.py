@@ -1,5 +1,5 @@
 from django.shortcuts import get_object_or_404
-from djoser.serializers import UserSerializer as DjoserUserSerializer
+from djoser.serializers import UserSerializer, UserCreateSerializer
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
@@ -10,7 +10,7 @@ from .fields import Base64ImageField
 from .utils import add_ingredients_to_recipe
 
 
-class UserRegistationSerializer(DjoserUserSerializer):
+class UserRegistationSerializer(UserSerializer):
     """Сериализатор модели CustomUserModels для регистрации пользователей."""
     is_subscribed = serializers.SerializerMethodField(read_only=True)
 
@@ -24,6 +24,15 @@ class UserRegistationSerializer(DjoserUserSerializer):
         if user.is_anonymous:
             return False
         return Subscription.objects.filter(user=user, author=obj.id).exists()
+
+
+class UserCreationSerializer(UserCreateSerializer):
+    """ Сериализация пользователя при регистрации """
+    class Meta:
+        model = CustomUser
+        fields = (
+            'email', 'username', 'first_name', 'last_name', 'password'
+        )
 
 
 class SubscriptionListSerializer(serializers.ModelSerializer):
