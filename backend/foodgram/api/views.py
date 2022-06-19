@@ -35,33 +35,53 @@ class SubscriptionViewSet(ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user
-        return user.user.all()
+        return CustomUser.objects.filter(author__user=self.request.user)
 
 
 class SubscribeView(views.APIView):
     pagination_class = RecipePagination
     permission_classes = [permissions.IsAuthenticated]
+    serializer = SubscriptionListSerializer
 
-    def post(self, request, pk):
-        author = get_object_or_404(CustomUser, pk=pk)
-        user = self.request.user
-        data = {'author': author.id, 'user': user.id}
-        serializer = SubscriptionListSerializer(
-            data=data, context={'request': request}
+    def post(self, request, *args, **kwargs):
+        user_id = self.kwargs.get('user_id')
+        if user_id == request.user.id:
+            return Response(
+                {'error': 'Нельзя подписаться на себя'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if Subscription.objects.filter(
+                user=request.user,
+                author_id=user_id
+        ).exists():
+            return Response(
+                {'error': 'Вы уже подписаны на пользователя'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        author = get_object_or_404(CustomUser, id=user_id)
+        Subscription.objects.create(
+            user=request.user,
+            author_id=user_id
         )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+        return Response(
+            self.serializer_class(author, context={'request': request}).data,
+            status=status.HTTP_201_CREATED
+        )
 
-    def delete(self, request, pk):
-        author = get_object_or_404(CustomUser, pk=pk)
-        user = self.request.user
-        subscription = get_object_or_404(
-            Subscription, user=user, author=author
+    def delete(self, request, *args, **kwargs):
+        user_id = self.kwargs.get('user_id')
+        get_object_or_404(CustomUser, id=user_id)
+        subscription = Subscription.objects.filter(
+            user=request.user,
+            author_id=user_id
         )
-        subscription.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        if subscription:
+            subscription.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {'error': 'Вы не подписаны на пользователя'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 class IngredientViewset(viewsets.ModelViewSet):
