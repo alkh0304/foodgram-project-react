@@ -37,9 +37,8 @@ class UserCreationSerializer(UserCreateSerializer):
 
 class SubscriptionListSerializer(UserRegistationSerializer):
     """ Сериализация списка на кого подписан пользователь"""
-    recipes = serializers.SerializerMethodField()
-    recipes_count = serializers.SerializerMethodField()
-    is_subscribed = serializers.SerializerMethodField(read_only=True)
+    recipes = serializers.SerializerMethodField(read_only=True)
+    recipes_count = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = CustomUser
@@ -48,21 +47,17 @@ class SubscriptionListSerializer(UserRegistationSerializer):
             'is_subscribed', 'recipes', 'recipes_count'
         )
 
-    def get_recipes_count(self, following):
-        return Recipe.objects.filter(author=following).count()
+    @staticmethod
+    def get_recipes_count(obj):
+        return obj.recipes.count()
 
-    def get_recipes(self, following):
-        queryset = self.context.get('request')
-        recipes_limit = queryset.query_params.get('recipes_limit')
-        if not recipes_limit:
-            return TinyRecipeSerializer(
-                following.author.all(),
-                many=True, context={'request': queryset}
-            ).data
-        return TinyRecipeSerializer(
-            following.author.all()[:int(recipes_limit)], many=True,
-            context={'request': queryset}
-        ).data
+    def get_recipes(self, obj):
+        request = self.context.get('request')
+        recipes = obj.recipes.all()
+        recipes_limit = request.query_params.get('recipes_limit')
+        if recipes_limit:
+            recipes = recipes[:int(recipes_limit)]
+        return TinyRecipeSerializer(recipes, many=True).data
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
