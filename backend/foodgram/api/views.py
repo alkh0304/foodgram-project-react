@@ -31,9 +31,9 @@ class UserViewSet(DjoserUserViewSet):
         detail=False,
         methods=['GET'],
         permission_classes=[permissions.IsAuthenticated],
-        url_path='users',
+        url_path='user',
     )
-    def users(self, request):
+    def user(self, request):
         serializer = UserRegistationSerializer(
             super().get_queryset(), many=True, context={
                 'request': request
