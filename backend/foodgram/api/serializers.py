@@ -52,12 +52,15 @@ class SubscriptionListSerializer(UserRegistationSerializer):
         return obj.recipes.count()
 
     def get_recipes(self, obj):
+        recipes_limit = None
         request = self.context.get('request')
-        recipes = obj.recipes.all()
-        recipes_limit = request.query_params.get('recipes_limit')
-        if recipes_limit:
-            recipes = recipes[:int(recipes_limit)]
-        return TinyRecipeSerializer(recipes, many=True).data
+        if request:
+            recipes_limit = request.query_params.get('recipes_limit')
+        if recipes_limit and recipes_limit.isdigit():
+            recipes_limit = int(recipes_limit)
+        queryset = obj.recipes.all()[:recipes_limit]
+        serializer = TinyRecipeSerializer(queryset, many=True)
+        return serializer.data
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
@@ -231,3 +234,4 @@ class TinyRecipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time')
+        read_only_fields = ['name', 'image', 'cooking_time']
