@@ -138,7 +138,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         image = vaidated_data.pop('image')
         tags = vaidated_data.pop('tags')
         recipe = Recipe.objects.create(image=image, **vaidated_data)
-        recipe.tags.set(tags)
+        recipe.ingredient_recipe.set(tags)
         self.create_ingredients(recipe, ingredients)
         return recipe
 
