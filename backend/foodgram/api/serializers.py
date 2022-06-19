@@ -52,14 +52,17 @@ class SubscriptionListSerializer(UserRegistationSerializer):
         return obj.recipes.count()
 
     def get_recipes(self, obj):
-        recipes_limit = None
         request = self.context.get('request')
-        if request:
-            recipes_limit = request.query_params.get('recipes_limit')
-        if recipes_limit and recipes_limit.isdigit():
-            recipes_limit = int(recipes_limit)
-        queryset = obj.recipes.all()[:recipes_limit]
-        serializer = TinyRecipeSerializer(queryset, many=True)
+        if request.GET.get('recipes_limit'):
+            recipe_limit = int(request.GET.get('recipes_limit'))
+            queryset = Recipe.objects.filter(
+                author=obj.author)[:recipe_limit]
+        else:
+            queryset = Recipe.objects.filter(
+                author=obj.author)
+        serializer = TinyRecipeSerializer(
+            queryset, read_only=True, many=True
+        )
         return serializer.data
 
 
