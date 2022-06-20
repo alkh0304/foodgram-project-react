@@ -59,9 +59,8 @@ class SubscriptionListSerializer(serializers.ModelSerializer):
         return Subscription.objects.filter(author=obj.author,
                                            user=request.user).exists()
 
-    def get_recipes_count(self, data):
-        return Recipe.objects.filter(
-                author=data.author).count()
+    def get_recipes_count(obj):
+        return obj.author.recipes.count()
 
     def get_recipes(self, data):
         request = self.context.get('request')
@@ -198,12 +197,12 @@ class RecipeViewSerializer(serializers.ModelSerializer):
     ingredients = RecipeIngredientSerializer(
         read_only=True, many=True, source='ingredient_recipe')
     is_favorited = serializers.SerializerMethodField()
-    is_in_shopping_list = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
         fields = ('tags', 'author', 'ingredients', 'is_favorited',
-                  'is_in_shopping_list', 'name', 'image', 'text',
+                  'is_in_shopping_cart', 'name', 'image', 'text',
                   'cooking_time', 'id')
 
     def get_is_favorited(self, obj):
@@ -214,7 +213,7 @@ class RecipeViewSerializer(serializers.ModelSerializer):
                 user=user, recipe=obj).exists()
         return False
 
-    def get_is_in_shopping_list(self, obj):
+    def get_is_in_shopping_cart(self, obj):
         """Проверка: добавлен ли рецепт в список покупок."""
         user = self.context['request'].user
         if user.is_authenticated:

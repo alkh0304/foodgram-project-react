@@ -4,13 +4,12 @@ from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet as DjoserUserViewSet
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
 
 from recipes.models import (FavoriteRecipe, Ingredient, Recipe,
                             RecipeIngredient, ShoppingList, Tag)
 from users.models import CustomUser, Subscription
-from .filters import CustomFilter
+from .filters import CustomFilter, IngredientFilter
 from .pagination import RecipePagination
 from .permissions import AuthorOrReadOnly
 from .serializers import (IngredientSerielizer,
@@ -62,8 +61,8 @@ class IngredientViewset(viewsets.ModelViewSet):
     permission_classes = [permissions.AllowAny]
     queryset = Ingredient.objects.all()
     pagination_class = None
-    filter_backends = (SearchFilter, )
-    search_fields = ('name', )
+    filter_backends = (IngredientFilter, )
+    search_fields = ('^name', )
 
 
 class TagViewset(viewsets.ModelViewSet):
