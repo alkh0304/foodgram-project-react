@@ -88,3 +88,7 @@ docker exec -it <CONTAINER ID> bash
 ```
 python foodgram/manage.py import_ingredients /app/ingredients.csv
 ```
+
+## Над проектом [foodgram](https://github.com/alkh0304/foodgram-project-react) работал:
+
+[Александр Хоменко](https://github.com/alkh0304)
