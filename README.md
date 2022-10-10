@@ -1,17 +1,20 @@
 # Foodgram
 
-[Ссылка на запущенный проект](http://84.201.143.178)
-
-Доступ к администрированию сайта:
-
-```
-логин: admin@gmail.com
-пароль: admin
-```
-
 ## Описание:
 
 Foodgram - сайт для опытных кулинаров и тех, кто просто решил попробовать что-то новое! Здесь вы сможете найти разнообразные рецепты, поделиться своими и даже подписаться на любимых авторов.
+
+## Технологии и библиотеки:
+- [Python](https://www.python.org/);
+- [Django](https://www.djangoproject.com);
+- [Django REST Framework](https://www.django-rest-framework.org);
+- [PostgreSQL](https://www.postgresql.org);
+- [Gunicorn](https://gunicorn.org);
+- [NGINX](https://nginx.org/ru/);
+- [Яндекс Облако](https://cloud.yandex.ru);
+- [Docker](https://www.docker.com);
+- [GIT](https://git-scm.com);
+- [CI/CD github actions](https://github.com/features/actions).
 
 ## Статус проекта:
 
